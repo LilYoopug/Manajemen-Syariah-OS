@@ -173,7 +173,7 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
           ) : (
             <div className="space-y-6">
               {displayGoals.map(goal => (
-                <GoalTracker key={goal.id} {...goal} />
+                <GoalTracker key={goal.id} {...goal} isLoading={isLoading} />
               ))}
             </div>
           )}
