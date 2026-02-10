@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import type { Task, ResetCycle, HistoryEntry } from '@/types';
 import { 
@@ -7,6 +7,7 @@ import {
     ClipboardListIcon, PlusCircleIcon, PencilIcon, 
     ClockIcon
 } from '@/components/common/Icons';
+import { Skeleton } from '@/components/common/Skeleton';
 
 const INITIAL_TASKS: Task[] = [
   { 
@@ -25,6 +26,16 @@ const INITIAL_TASKS: Task[] = [
 const TaskManager: React.FC = () => {
   const [tasks, setTasks] = useLocalStorage<Task[]>('syariah_os_tasks', INITIAL_TASKS);
   const [categories] = useLocalStorage<string[]>('syariah_os_categories', ['SDM', 'Bisnis', 'Keuangan', 'Sosial', 'Kepatuhan', 'Umum']);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      setIsLoading(true);
+      // Simulate API - replace with real API later
+      setTimeout(() => setIsLoading(false), 600);
+    };
+    fetchTasks();
+  }, []);
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTaskData, setNewTaskData] = useState({
@@ -161,55 +172,80 @@ const TaskManager: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {filteredTasks.map(task => {
-          const percentage = task.hasLimit ? Math.min(Math.round((task.progress || 0)), 100) : 0;
-          return (
-            <div key={task.id} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col group transition-all hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center flex-1 min-w-0 mr-4">
-                    <button
-                        onClick={() => handleToggleTask(task.id)}
-                        className={`h-7 w-7 rounded-lg border-2 flex items-center justify-center transition-all ${
-                            task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-primary-500 text-transparent'
-                        } cursor-pointer active:scale-90`}
-                    >
-                        <CheckIcon className="w-5 h-5" />
-                    </button>
-                    <div className="ml-4 truncate">
-                        <div className="flex items-center gap-2">
-                             <h4 className={`text-base font-bold text-gray-900 dark:text-white truncate ${task.completed ? 'line-through text-gray-400' : ''}`}>
-                                {task.text}
-                            </h4>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">{task.category}</span>
-                            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getCycleLabel(task.resetCycle)}</span>
-                        </div>
+        {isLoading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                <div className="flex items-start space-x-4">
+                  <Skeleton className="w-5 h-5 rounded mt-1" />
+                  <div className="flex-1">
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <div className="flex items-center space-x-4 mt-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-16" />
                     </div>
-                </div>
-                <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openHistoryModal(task)} className="p-2 text-gray-400 hover:text-primary-600 transition-all" title="Riwayat Progres"><ClockIcon className="w-4 h-4"/></button>
-                    <button onClick={() => setTasks(prev => prev.filter(t => t.id !== task.id))} className="p-2 text-gray-400 hover:text-red-500 transition-all"><TrashIcon className="w-4 h-4" /></button>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                    <Skeleton className="w-8 h-8 rounded-lg" />
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredTasks.map(task => {
+              const percentage = task.hasLimit ? Math.min(Math.round((task.progress || 0)), 100) : 0;
+              return (
+                <div key={task.id} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col group transition-all hover:shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center flex-1 min-w-0 mr-4">
+                        <button
+                            onClick={() => handleToggleTask(task.id)}
+                            className={`h-7 w-7 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                task.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600 hover:border-primary-500 text-transparent'
+                            } cursor-pointer active:scale-90`}
+                        >
+                            <CheckIcon className="w-5 h-5" />
+                        </button>
+                        <div className="ml-4 truncate">
+                            <div className="flex items-center gap-2">
+                                 <h4 className={`text-base font-bold text-gray-900 dark:text-white truncate ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                                    {task.text}
+                                </h4>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">{task.category}</span>
+                                <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getCycleLabel(task.resetCycle)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => openHistoryModal(task)} className="p-2 text-gray-400 hover:text-primary-600 transition-all" title="Riwayat Progres"><ClockIcon className="w-4 h-4"/></button>
+                        <button onClick={() => setTasks(prev => prev.filter(t => t.id !== task.id))} className="p-2 text-gray-400 hover:text-red-500 transition-all"><TrashIcon className="w-4 h-4" /></button>
+                    </div>
+                  </div>
 
-              {task.hasLimit && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Progres Capaian Target</span>
-                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      {task.currentValue?.toLocaleString() || 0} / {task.targetValue?.toLocaleString() || 0} {task.unit}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-                    <div className={`h-2.5 rounded-full transition-all duration-700 ${task.completed ? 'bg-emerald-500' : 'bg-primary-600'}`} style={{ width: `${percentage}%` }}></div>
-                  </div>
+                  {task.hasLimit && (
+                    <div className="mt-4">
+                      <div className="flex justify-between items-baseline mb-1">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Progres Capaian Target</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          {task.currentValue?.toLocaleString() || 0} / {task.targetValue?.toLocaleString() || 0} {task.unit}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+                        <div className={`h-2.5 rounded-full transition-all duration-700 ${task.completed ? 'bg-emerald-500' : 'bg-primary-600'}`} style={{ width: `${percentage}%` }}></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {isAddModalOpen && (
