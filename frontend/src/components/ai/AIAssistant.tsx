@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@/components/common/Icons';
+import { SkeletonAvatar, SkeletonText } from '@/components/common/Skeleton';
 import { GoogleGenAI } from "@google/genai";
 // FIX: Import View from '../types' instead of '../App' and combine with other type imports.
 import type { Message, Kpi, Goal, View } from '@/types';
@@ -145,13 +146,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ onClose, currentView, kpiData
             </div>
           ))}
           {isLoading && (
-             <div className="flex justify-start">
-                <div className="max-w-xs px-4 py-3 rounded-2xl bg-gray-100 dark:bg-gray-700">
-                    <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse [animation-delay:0.2s]"></div>
-                        <div className="w-2 h-2 bg-gray-500 rounded-full animate-pulse [animation-delay:0.4s]"></div>
-                    </div>
+            <div className="flex items-start space-x-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50">
+                <SkeletonAvatar size="sm" />
+                <div className="flex-1">
+                    <SkeletonText lines={2} />
                 </div>
             </div>
           )}
