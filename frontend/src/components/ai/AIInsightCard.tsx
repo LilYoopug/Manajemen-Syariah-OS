@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { SparklesIcon } from '@/components/common/Icons';
+import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 import type { Kpi, Goal } from '@/types';
 
 interface AIInsightCardProps {
@@ -96,11 +97,11 @@ Struktur jawaban Anda sebagai berikut, gunakan markdown **tebal** untuk judul:
       
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         {isLoading && (
-            <div className="flex justify-center items-center h-24">
-                <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse [animation-delay:0.2s]"></div>
-                    <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse [animation-delay:0.4s]"></div>
+            <div className="py-4">
+                <SkeletonText lines={4} className="max-w-2xl" />
+                <div className="mt-4 flex items-center space-x-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
                 </div>
             </div>
         )}
