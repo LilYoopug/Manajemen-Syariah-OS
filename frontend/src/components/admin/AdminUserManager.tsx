@@ -5,6 +5,7 @@ import {
     UserIcon, TrashIcon, CheckCircleIcon, XMarkIcon, 
     Cog6ToothIcon, DownloadIcon, ChevronRightIcon 
 } from '@/components/common/Icons';
+import { Skeleton, SkeletonAvatar } from '@/components/common/Skeleton';
 import type { User } from '@/types';
 
 declare const jsPDF: any;
@@ -24,10 +25,20 @@ const AdminUserManager: React.FC = () => {
   const [users, setUsers] = useLocalStorage<User[]>('syariahos_admin_users', INITIAL_USERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      setTimeout(() => setIsLoading(false), 600);
+    };
+    fetchUsers();
+  }, [currentPage]);
 
   const filteredUsers = useMemo(() => {
     return users.filter(u => 
@@ -71,10 +82,13 @@ const AdminUserManager: React.FC = () => {
     }
   };
 
-  const handleUpdateUser = (e: React.FormEvent) => {
+  const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingUser) {
+        setIsSubmitting(true);
+        await new Promise(resolve => setTimeout(resolve, 500));
         setUsers(users.map(u => u.id === editingUser.id ? editingUser : u));
+        setIsSubmitting(false);
         setEditingUser(null);
     }
   };
@@ -150,51 +164,82 @@ const AdminUserManager: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {paginatedUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors group">
-                  <td className="px-6 py-5">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-11 h-11 rounded-xl bg-gray-100 dark:bg-gray-700 border dark:border-gray-600 flex items-center justify-center shadow-sm">
-                        <UserIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center space-x-4">
+                        <SkeletonAvatar size="md" />
+                        <div>
+                          <Skeleton className="h-4 w-32 mb-1" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user.name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className={`px-2.5 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-wider ${user.role === 'admin' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-gray-50 text-gray-500 border border-gray-100'} dark:bg-gray-800 dark:border-gray-700`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${user.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'} dark:bg-gray-800`}>
-                      <div className={`w-1.5 h-1.5 rounded-full mr-2 ${user.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                      {user.status === 'active' ? 'Aktif' : 'Terblokir'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => setEditingUser(user)} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all" title="Edit Profil"><Cog6ToothIcon className="w-5 h-5"/></button>
-                        {user.role !== 'admin' && (
-                            <>
-                                <button type="button" onClick={() => toggleStatus(user.id)} className={`p-2 transition-all rounded-lg ${user.status === 'active' ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'}`} title={user.status === 'active' ? 'Suspend Account' : 'Activate Account'}>
-                                    {user.status === 'active' ? <XMarkIcon className="w-5 h-5" /> : <CheckCircleIcon className="w-5 h-5" />}
-                                </button>
-                                <button type="button" onClick={(e) => deleteUser(e, user.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Hapus Permanen"><TrashIcon className="w-5 h-5" /></button>
-                            </>
-                        )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {paginatedUsers.length === 0 && (
-                <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 italic">
-                        Tidak ada user yang ditemukan.
                     </td>
-                </tr>
+                    <td className="px-6 py-5">
+                      <Skeleton className="h-6 w-20 rounded-lg" />
+                    </td>
+                    <td className="px-6 py-5">
+                      <Skeleton className="h-6 w-24 rounded-full" />
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                        <Skeleton className="w-8 h-8 rounded-lg" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <>
+                  {paginatedUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/20 transition-colors group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-11 h-11 rounded-xl bg-gray-100 dark:bg-gray-700 border dark:border-gray-600 flex items-center justify-center shadow-sm">
+                            <UserIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{user.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`px-2.5 py-1.5 rounded-lg text-[10px] uppercase font-bold tracking-wider ${user.role === 'admin' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-gray-50 text-gray-500 border border-gray-100'} dark:bg-gray-800 dark:border-gray-700`}>
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${user.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'} dark:bg-gray-800`}>
+                          <div className={`w-1.5 h-1.5 rounded-full mr-2 ${user.status === 'active' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                          {user.status === 'active' ? 'Aktif' : 'Terblokir'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex items-center justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button type="button" onClick={() => setEditingUser(user)} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all" title="Edit Profil"><Cog6ToothIcon className="w-5 h-5"/></button>
+                            {user.role !== 'admin' && (
+                                <>
+                                    <button type="button" onClick={() => toggleStatus(user.id)} className={`p-2 transition-all rounded-lg ${user.status === 'active' ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'}`} title={user.status === 'active' ? 'Suspend Account' : 'Activate Account'}>
+                                        {user.status === 'active' ? <XMarkIcon className="w-5 h-5" /> : <CheckCircleIcon className="w-5 h-5" />}
+                                    </button>
+                                    <button type="button" onClick={(e) => deleteUser(e, user.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Hapus Permanen"><TrashIcon className="w-5 h-5" /></button>
+                                </>
+                            )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {paginatedUsers.length === 0 && (
+                    <tr>
+                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 italic">
+                            Tidak ada user yang ditemukan.
+                        </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
@@ -203,40 +248,55 @@ const AdminUserManager: React.FC = () => {
         {/* Pagination Footer */}
         {filteredUsers.length > 0 && (
             <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                    Menampilkan <span className="text-indigo-600 dark:text-indigo-400">{Math.min(filteredUsers.length, (currentPage - 1) * itemsPerPage + 1)} - {Math.min(filteredUsers.length, currentPage * itemsPerPage)}</span> dari <span className="text-indigo-600 dark:text-indigo-400">{filteredUsers.length}</span> user
-                </div>
-                <div className="flex items-center space-x-1">
-                    <button 
-                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        disabled={currentPage === 1}
-                        className="p-2 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:text-indigo-600 transition-all shadow-sm"
-                    >
-                        <ChevronRightIcon className="w-4 h-4 rotate-180" />
-                    </button>
-                    
-                    {[...Array(totalPages)].map((_, i) => (
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-4 w-48" />
+                    <div className="flex items-center space-x-1">
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                        Menampilkan <span className="text-indigo-600 dark:text-indigo-400">{Math.min(filteredUsers.length, (currentPage - 1) * itemsPerPage + 1)} - {Math.min(filteredUsers.length, currentPage * itemsPerPage)}</span> dari <span className="text-indigo-600 dark:text-indigo-400">{filteredUsers.length}</span> user
+                    </div>
+                    <div className="flex items-center space-x-1">
                         <button 
-                            key={i}
-                            onClick={() => setCurrentPage(i + 1)}
-                            className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all shadow-sm ${
-                                currentPage === i + 1 
-                                ? 'bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none' 
-                                : 'bg-white dark:bg-gray-800 text-gray-500 border dark:border-gray-700 hover:bg-gray-50'
-                            }`}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:text-indigo-600 transition-all shadow-sm"
                         >
-                            {i + 1}
+                            <ChevronRightIcon className="w-4 h-4 rotate-180" />
                         </button>
-                    ))}
+                        
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button 
+                                key={i}
+                                onClick={() => setCurrentPage(i + 1)}
+                                className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all shadow-sm ${
+                                    currentPage === i + 1 
+                                    ? 'bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none' 
+                                    : 'bg-white dark:bg-gray-800 text-gray-500 border dark:border-gray-700 hover:bg-gray-50'
+                                }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
 
-                    <button 
-                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        disabled={currentPage === totalPages}
-                        className="p-2 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:text-indigo-600 transition-all shadow-sm"
-                    >
-                        <ChevronRightIcon className="w-4 h-4" />
-                    </button>
-                </div>
+                        <button 
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:text-indigo-600 transition-all shadow-sm"
+                        >
+                            <ChevronRightIcon className="w-4 h-4" />
+                        </button>
+                    </div>
+                  </>
+                )}
             </div>
         )}
       </div>
@@ -265,7 +325,20 @@ const AdminUserManager: React.FC = () => {
                         </select>
                     </div>
                     <div className="pt-4">
-                      <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition active:scale-[0.98]">Update Konfigurasi</button>
+                      <button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                            Memproses...
+                          </>
+                        ) : (
+                          'Update Konfigurasi'
+                        )}
+                      </button>
                     </div>
                 </form>
             </div>
