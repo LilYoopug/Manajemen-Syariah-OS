@@ -1,8 +1,32 @@
 
 import React from 'react';
-import type { Kpi } from '@/types';
+import { Skeleton } from '@/components/common/Skeleton';
 
-const KpiCard: React.FC<Kpi> = ({ title, value, change, changeType, icon: Icon }) => {
+interface KpiCardProps {
+  title: string;
+  value: string;
+  change: string;
+  changeType: 'increase' | 'decrease' | 'neutral';
+  icon: React.ElementType;
+  isLoading?: boolean;
+}
+
+const KpiCard: React.FC<KpiCardProps> = ({ title, value, change, changeType, icon: Icon, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <Skeleton className="h-4 w-24 mb-2" />
+            <Skeleton className="h-8 w-16 mb-2" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <Skeleton className="w-12 h-12 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
   const isIncrease = changeType === 'increase';
   const changeColor = isIncrease ? 'text-green-500' : 'text-red-500';
 
