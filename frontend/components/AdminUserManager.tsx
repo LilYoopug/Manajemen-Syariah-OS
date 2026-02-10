@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
+import useLocalStorage from '@/hooks/useLocalStorage';
 import { 
     UserIcon, TrashIcon, CheckCircleIcon, XMarkIcon, 
     Cog6ToothIcon, DownloadIcon, ChevronRightIcon 

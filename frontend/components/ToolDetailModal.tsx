@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import type { Tool, DirectoryItem } from '@/types';
 import { XMarkIcon, BookOpenIcon, LinkIcon } from '@/components/common/Icons';
-import { DIRECTORY_DATA } from '../constants';
+import { DIRECTORY_DATA } from '@/constants';
 
 interface ToolDetailModalProps {
   tool: Tool;

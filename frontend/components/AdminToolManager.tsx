@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import useLocalStorage from '../hooks/useLocalStorage';
-import { TOOLS_DATA } from '../constants';
+import useLocalStorage from '@/hooks/useLocalStorage';
+import { TOOLS_DATA } from '@/constants';
 // FIX: Import ChevronDownIcon to resolve 'Cannot find name' errors on lines 142 and 159.
 import { 
     BriefcaseIcon, TrashIcon, Cog6ToothIcon, PlusCircleIcon, 

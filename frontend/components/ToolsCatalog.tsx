@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { TOOLS_DATA } from '../constants';
+import { TOOLS_DATA } from '@/constants';
 import ToolDetailModal from './ToolDetailModal';
 import type { Tool } from '@/types';
 import { ToolCategory } from '@/types';
