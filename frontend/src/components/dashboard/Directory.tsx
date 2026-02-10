@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DIRECTORY_DATA } from '@/constants';
 import type { DirectoryItem } from '@/types';
 import { ChevronRightIcon, ChevronDownIcon } from '@/components/common/Icons';
+import { Skeleton } from '@/components/common/Skeleton';
 
 const DirectoryNode: React.FC<{ item: DirectoryItem; level: number }> = ({ item, level }) => {
   const [isOpen, setIsOpen] = useState(level < 1); // Auto-open first level
@@ -43,6 +44,17 @@ const DirectoryNode: React.FC<{ item: DirectoryItem; level: number }> = ({ item,
 };
 
 const Directory: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDirectory = async () => {
+      setIsLoading(true);
+      // Simulate API - replace with real API later
+      setTimeout(() => setIsLoading(false), 500);
+    };
+    fetchDirectory();
+  }, []);
+
   return (
     <div className="space-y-8">
       <div>
@@ -51,9 +63,20 @@ const Directory: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-md">
-        {DIRECTORY_DATA.map(item => (
-          <DirectoryNode key={item.id} item={item} level={0} />
-        ))}
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center space-x-3 p-3 rounded-lg">
+                <Skeleton className="w-5 h-5" />
+                <Skeleton className="h-5 w-48" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          DIRECTORY_DATA.map(item => (
+            <DirectoryNode key={item.id} item={item} level={0} />
+          ))
+        )}
       </div>
     </div>
   );
