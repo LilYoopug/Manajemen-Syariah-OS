@@ -10,7 +10,7 @@ import AIAssistant from './components/AIAssistant';
 import DirectoryDetailModal from './components/DirectoryDetailModal';
 import Settings from './components/Settings';
 import LandingPage from './components/LandingPage';
-import Auth from './components/Auth';
+import Auth from '@/components/auth/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import AdminUserManager from './components/AdminUserManager';
 import AdminToolManager from './components/AdminToolManager';

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { DashboardIcon, EyeIcon, EyeSlashIcon, UserIcon, ArrowTrendingUpIcon, SparklesIcon } from './Icons';
+import { DashboardIcon, EyeIcon, EyeSlashIcon, UserIcon, ArrowTrendingUpIcon, SparklesIcon } from '@/components/common/Icons';
 import type { View } from '@/types';
 
 interface AuthProps {
