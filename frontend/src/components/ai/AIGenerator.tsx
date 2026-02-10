@@ -6,6 +6,7 @@ import {
   CalendarDaysIcon, UsersIcon, PaperAirplaneIcon, 
   DocumentCheckIcon, BookOpenIcon, SparklesIcon 
 } from '@/components/common/Icons';
+import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 
 const syariahPrinciples = [
   "Amanah (Kepercayaan & Tanggung Jawab)",
@@ -132,8 +133,8 @@ const AIGenerator: React.FC = () => {
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Rancang roadmap keberkahan dengan kerangka POAC Islami dan kecerdasan AI.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <div className="lg:col-span-4 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 space-y-6">
+            <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 space-y-6">
                     <div>
                         <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Tujuan Utama</label>
                         <textarea
@@ -197,7 +198,7 @@ const AIGenerator: React.FC = () => {
                     {error && <p className="text-xs text-red-500 text-center">{error}</p>}
                 </div>
 
-                <div className="lg:col-span-8 min-h-[500px]">
+                <div className="min-h-[500px]">
                     {!plan && !isLoading && (
                         <div className="h-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-700 p-12 text-center shadow-md">
                             <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-2xl flex items-center justify-center mb-6 border dark:border-gray-700">
@@ -209,13 +210,42 @@ const AIGenerator: React.FC = () => {
                     )}
 
                     {isLoading && (
-                        <div className="h-full flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-12 text-center shadow-md">
-                            <div className="relative mb-8">
-                                <div className="w-20 h-20 border-4 border-primary-100 dark:border-gray-700 border-t-primary-600 rounded-full animate-spin"></div>
-                                <WandSparklesIcon className="w-8 h-8 text-primary-600 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+                        <div className="space-y-6 animate-fadeIn pb-8">
+                            {/* Header Skeleton */}
+                            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-md border border-gray-100 dark:border-gray-700">
+                                <Skeleton className="h-4 w-32 mb-4" />
+                                <Skeleton className="h-10 w-3/4 mb-4" />
+                                <SkeletonText lines={3} />
                             </div>
-                            <p className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">Sedang Merumuskan Strategi...</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Menyeimbangkan visi operasional dengan landasan keberkahan Syariah.</p>
+                            
+                            {/* Phases Skeleton */}
+                            <div className="space-y-6">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700">
+                                        <div className="flex items-center space-x-4 mb-4">
+                                            <Skeleton className="w-12 h-12 rounded-xl" />
+                                            <Skeleton className="h-6 w-48" />
+                                        </div>
+                                        <Skeleton className="h-4 w-full mb-4" />
+                                        <div className="space-y-2">
+                                            {Array.from({ length: 3 }).map((_, j) => (
+                                                <Skeleton key={j} className="h-10 w-full rounded-xl" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {/* Maqasid Skeleton */}
+                            <div className="bg-gradient-to-r from-primary-600/20 to-indigo-600/20 rounded-2xl p-8">
+                                <div className="flex items-center space-x-4">
+                                    <Skeleton className="w-16 h-16 rounded-2xl" />
+                                    <div className="flex-1">
+                                        <Skeleton className="h-6 w-48 mb-2" />
+                                        <SkeletonText lines={2} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -247,7 +277,7 @@ const AIGenerator: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-6">
                                 {plan.phases.map((phase, i) => (
                                     <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col h-full hover:border-primary-200 dark:hover:border-primary-900 transition-all group">
                                         <div className="flex items-center space-x-4 mb-4">
