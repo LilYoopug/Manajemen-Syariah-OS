@@ -1,13 +1,14 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { getKpiDataForPeriod, getGoalsDataForPeriod } from '@/constants';
 import KpiCard from '@/components/common/KpiCard';
 import GoalTracker from '@/components/dashboard/GoalTracker';
 import { DownloadIcon, CalendarDaysIcon } from '@/components/common/Icons';
-import type { Goal, Kpi } from '@/types';
+import type { Goal } from '@/types';
 import AIInsightCard from '@/components/ai/AIInsightCard';
+import { Skeleton, SkeletonCard } from '@/components/common/Skeleton';
 
-declare const Recharts: any;
 declare const jsPDF: any;
 declare const XLSX: any;
 
@@ -19,39 +20,19 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
-  const [chartReady, setChartReady] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      // Simulate API call - replace with real API later
+      setTimeout(() => setIsLoading(false), 500);
+    };
+    fetchData();
+  }, [dateRange]);
+  
   const displayKpis = useMemo(() => getKpiDataForPeriod(dateRange === 'all' ? null : parseInt(dateRange)), [dateRange]);
   const displayGoals = useMemo(() => getGoalsDataForPeriod(dateRange === 'all' ? null : parseInt(dateRange)), [dateRange]);
-
-  useEffect(() => {
-    const loadRecharts = () => {
-        if (typeof Recharts !== 'undefined') {
-            setChartReady(true);
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = "https://unpkg.com/recharts/umd/Recharts.min.js";
-        script.async = true;
-        script.onload = () => {
-            setChartReady(true);
-        };
-        document.body.appendChild(script);
-    };
-
-    if ((window as any).React) {
-        loadRecharts();
-    } else {
-        const checkReact = setInterval(() => {
-            if ((window as any).React) {
-                loadRecharts();
-                clearInterval(checkReact);
-            }
-        }, 50);
-        return () => clearInterval(checkReact);
-    }
-  }, []);
 
   const handleExportPDF = () => {
     const doc = new jsPDF.jsPDF();
@@ -83,50 +64,10 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
     XLSX.writeFile(workbook, "dashboard-report.xlsx");
   };
 
-  const renderChart = () => {
-    if (!chartReady || typeof Recharts === 'undefined') {
-      return (
-        <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-sm font-medium">Memuat Grafik Muamalah...</p>
-        </div>
-      );
-    }
-    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
-    
-    const chartData = displayGoals.map((g: Goal) => ({ 
-        name: g.title.length > 15 ? g.title.substring(0, 12) + '...' : g.title, 
-        progress: Math.round((g.progress / g.target) * 100) 
-    }));
-
-    return (
-       <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.1)" vertical={false} />
-            <XAxis 
-                dataKey="name" 
-                tick={{ fill: 'currentColor', fontSize: 10 }} 
-                interval={0}
-                angle={-45}
-                textAnchor="end"
-            />
-            <YAxis unit="%" tick={{ fill: 'currentColor', fontSize: 12 }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(31, 41, 55, 0.95)',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                color: '#f3f4f6',
-                borderRadius: '0.75rem',
-                fontSize: '12px'
-              }}
-              cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
-            />
-            <Legend verticalAlign="top" height={36}/>
-            <Bar dataKey="progress" fill="#2563eb" name="Progres Capaian (%)" barSize={35} radius={[6, 6, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-    );
-  }
+  const chartData = displayGoals.map((g: Goal) => ({ 
+      name: g.title.length > 15 ? g.title.substring(0, 12) + '...' : g.title, 
+      progress: Math.round((g.progress / g.target) * 100) 
+  }));
 
   return (
     <div className="space-y-6">
@@ -162,9 +103,18 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
       <AIInsightCard kpiData={displayKpis} goalData={displayGoals} />
       
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {displayKpis.map((kpi, index) => (
-          <KpiCard key={index} {...kpi} />
-        ))}
+        {isLoading ? (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        ) : (
+          displayKpis.map((kpi, index) => (
+            <KpiCard key={index} {...kpi} />
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -174,7 +124,31 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Grafik Target (%)</h3>
           </div>
           <div className="h-96 w-full">
-            {renderChart()}
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.1)" vertical={false} />
+                <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: 'currentColor', fontSize: 10 }} 
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                />
+                <YAxis unit="%" tick={{ fill: 'currentColor', fontSize: 12 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    color: '#f3f4f6',
+                    borderRadius: '0.75rem',
+                    fontSize: '12px'
+                  }}
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                />
+                <Legend verticalAlign="top" height={36}/>
+                <Bar dataKey="progress" fill="#2563eb" name="Progres Capaian (%)" barSize={35} radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -183,11 +157,26 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
             <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Detail Progres</p>
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Goals & Targets</h3>
           </div>
-          <div className="space-y-6">
-            {displayGoals.map(goal => (
-              <GoalTracker key={goal.id} {...goal} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-xl">
+                  <div className="flex justify-between items-center mb-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                  <Skeleton className="h-4 w-24 mt-2" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {displayGoals.map(goal => (
+                <GoalTracker key={goal.id} {...goal} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
