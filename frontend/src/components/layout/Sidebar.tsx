@@ -6,7 +6,7 @@ import {
   Cog6ToothIcon, ArrowLeftOnRectangleIcon, UsersIcon,
   BriefcaseIcon, TrashIcon, PlusCircleIcon, PencilIcon, CheckIcon,
   ClipboardListIcon
-} from './Icons';
+} from '@/components/common/Icons';
 import type { DirectoryItem, View } from '@/types';
 
 interface SidebarProps {

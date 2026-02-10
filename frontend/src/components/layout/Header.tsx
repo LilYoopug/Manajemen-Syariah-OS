@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SunIcon, MoonIcon, MenuIcon, ChatBubbleLeftRightIcon, DashboardIcon } from './Icons';
+import { SunIcon, MoonIcon, MenuIcon, ChatBubbleLeftRightIcon, DashboardIcon } from '@/components/common/Icons';
 
 interface HeaderProps {
   toggleTheme: () => void;

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
-import { SparklesIcon } from './Icons';
+import { SparklesIcon } from '@/components/common/Icons';
 import type { Kpi, Goal } from '@/types';
 
 interface AIInsightCardProps {

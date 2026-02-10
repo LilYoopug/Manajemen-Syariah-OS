@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UsersIcon, ToolsIcon, CheckCircleIcon, ChartPieIcon, ArrowTrendingUpIcon } from './Icons';
+import { UsersIcon, ToolsIcon, CheckCircleIcon, ChartPieIcon, ArrowTrendingUpIcon } from '@/components/common/Icons';
 
 const AdminDashboard: React.FC = () => {
   const stats = [

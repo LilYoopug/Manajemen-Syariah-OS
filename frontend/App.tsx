@@ -1,20 +1,20 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Sidebar from './components/Sidebar';
+import Sidebar from '@/src/components/layout/Sidebar';
 import Dashboard from './components/Dashboard';
 import ToolsCatalog from './components/ToolsCatalog';
 import AIGenerator from './components/AIGenerator';
 import TaskManager from './components/TaskManager';
-import Header from './components/Header';
+import Header from '@/src/components/layout/Header';
 import AIAssistant from './components/AIAssistant';
 import DirectoryDetailModal from './components/DirectoryDetailModal';
 import Settings from './components/Settings';
 import LandingPage from './components/LandingPage';
-import Auth from '@/components/auth/Auth';
+import Auth from '@/src/components/auth/Auth';
 import AdminDashboard from './components/AdminDashboard';
 import AdminUserManager from './components/AdminUserManager';
 import AdminToolManager from './components/AdminToolManager';
-import { HomeIcon } from './components/Icons';
+import { HomeIcon } from '@/components/common/Icons';
 import type { DirectoryItem, View } from '@/types';
 import { getKpiDataForPeriod, getGoalsDataForPeriod, DIRECTORY_DATA as INITIAL_DIRECTORY } from '@/constants';
 import useLocalStorage from '@/hooks/useLocalStorage';

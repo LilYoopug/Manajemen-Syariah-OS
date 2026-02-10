@@ -1,6 +1,6 @@
 import React from 'react';
 import type { DirectoryItem } from '@/types';
-import { XMarkIcon } from './Icons';
+import { XMarkIcon } from '@/components/common/Icons';
 
 interface DirectoryDetailModalProps {
   item: DirectoryItem;

@@ -5,7 +5,7 @@ import {
   WandSparklesIcon, ClipboardIcon, CheckIcon, 
   CalendarDaysIcon, UsersIcon, PaperAirplaneIcon, 
   DocumentCheckIcon, BookOpenIcon, SparklesIcon 
-} from './Icons';
+} from '@/components/common/Icons';
 
 const syariahPrinciples = [
   "Amanah (Kepercayaan & Tanggung Jawab)",

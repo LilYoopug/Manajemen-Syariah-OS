@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from './Icons';
+import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from '@/components/common/Icons';
 import { GoogleGenAI } from "@google/genai";
 // FIX: Import View from '../types' instead of '../App' and combine with other type imports.
 import type { Message, Kpi, Goal, View } from '@/types';

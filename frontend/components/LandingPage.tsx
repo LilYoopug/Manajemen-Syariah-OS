@@ -5,7 +5,7 @@ import {
   WandSparklesIcon, ArrowTrendingUpIcon, 
   CheckCircleIcon, UserIcon, BriefcaseIcon, UsersIcon,
   MenuIcon, XMarkIcon
-} from './Icons';
+} from '@/components/common/Icons';
 import type { View } from '@/types';
 
 interface LandingPageProps {

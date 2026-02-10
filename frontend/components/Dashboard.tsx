@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { getKpiDataForPeriod, getGoalsDataForPeriod } from '../constants';
-import KpiCard from './KpiCard';
+import KpiCard from '@/components/common/KpiCard';
 import GoalTracker from './GoalTracker';
-import { DownloadIcon, CalendarDaysIcon } from './Icons';
+import { DownloadIcon, CalendarDaysIcon } from '@/components/common/Icons';
 import type { Goal, Kpi } from '@/types';
 import AIInsightCard from './AIInsightCard';
 

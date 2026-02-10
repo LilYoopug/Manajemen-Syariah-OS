@@ -6,7 +6,7 @@ import {
     TrashIcon, CheckIcon, XMarkIcon, 
     ClipboardListIcon, PlusCircleIcon, PencilIcon, 
     ClockIcon
-} from './Icons';
+} from '@/components/common/Icons';
 
 const INITIAL_TASKS: Task[] = [
   { 

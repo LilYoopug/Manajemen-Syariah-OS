@@ -4,7 +4,7 @@ import { ToolCategory } from '@/types';
 import { 
   UserIcon, BriefcaseIcon, UsersIcon, BanknotesIcon, AcademicCapIcon, GlobeAltIcon,
   CheckCircleIcon, ArrowTrendingUpIcon, ChartPieIcon, DocumentCheckIcon
-} from '../components/Icons';
+} from '@/components/common/Icons';
 
 const RAW_DIRECTORY_DATA: DirectoryItem[] = [
   {

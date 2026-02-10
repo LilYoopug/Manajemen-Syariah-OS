@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { DIRECTORY_DATA } from '../constants';
 import type { DirectoryItem } from '@/types';
-import { ChevronRightIcon, ChevronDownIcon } from './Icons';
+import { ChevronRightIcon, ChevronDownIcon } from '@/components/common/Icons';
 
 const DirectoryNode: React.FC<{ item: DirectoryItem; level: number }> = ({ item, level }) => {
   const [isOpen, setIsOpen] = useState(level < 1); // Auto-open first level

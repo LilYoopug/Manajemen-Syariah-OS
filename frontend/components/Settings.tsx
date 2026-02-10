@@ -7,7 +7,7 @@ import {
   SunIcon, MoonIcon, CheckIcon, CameraIcon, XMarkIcon,
   PlusCircleIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon,
   BookOpenIcon, ChevronRightIcon, ChevronDownIcon
-} from './Icons';
+} from '@/components/common/Icons';
 import type { UserProfile, View } from '@/types';
 
 interface SettingsProps {

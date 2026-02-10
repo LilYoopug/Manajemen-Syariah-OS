@@ -7,7 +7,7 @@ import {
     BriefcaseIcon, TrashIcon, Cog6ToothIcon, PlusCircleIcon, 
     XMarkIcon, LinkIcon, MagnifyingGlassIcon, FunnelIcon, CalendarIcon,
     ChevronDownIcon 
-} from './Icons';
+} from '@/components/common/Icons';
 import type { Tool } from '@/types';
 import { ToolCategory } from '@/types';
 

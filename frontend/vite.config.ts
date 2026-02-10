@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
           '@/types': path.resolve(__dirname, './src/types/index.ts'),
           '@/constants': path.resolve(__dirname, './src/constants/index.ts'),
           '@/hooks': path.resolve(__dirname, './src/hooks'),
+          '@/components/common': path.resolve(__dirname, './src/components/common'),
           '@': path.resolve(__dirname, '.'),
         }
       }
