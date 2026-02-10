@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { XMarkIcon, PaperAirplaneIcon, ChatBubbleLeftRightIcon } from './Icons';
 import { GoogleGenAI } from "@google/genai";
 // FIX: Import View from '../types' instead of '../App' and combine with other type imports.
-import type { Message, Kpi, Goal, View } from '../types';
+import type { Message, Kpi, Goal, View } from '@/types';
 
 const SYSTEM_INSTRUCTION_BASE = `You are an expert AI assistant specializing in Syariah Management. 
 Your name is 'AI Muamalah Assistant'. Answer user queries, generate insights, and provide relevant dalils (Qur'an & Hadith) with their sources.

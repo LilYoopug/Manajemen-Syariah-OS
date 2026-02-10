@@ -1,6 +1,6 @@
 
-import type { DirectoryItem, Tool, Kpi, Goal } from '../types';
-import { ToolCategory } from '../types';
+import type { DirectoryItem, Tool, Kpi, Goal } from '@/types';
+import { ToolCategory } from '@/types';
 import { 
   UserIcon, BriefcaseIcon, UsersIcon, BanknotesIcon, AcademicCapIcon, GlobeAltIcon,
   CheckCircleIcon, ArrowTrendingUpIcon, ChartPieIcon, DocumentCheckIcon

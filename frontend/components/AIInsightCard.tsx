@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { SparklesIcon } from './Icons';
-import type { Kpi, Goal } from '../types';
+import type { Kpi, Goal } from '@/types';
 
 interface AIInsightCardProps {
   kpiData: Kpi[];

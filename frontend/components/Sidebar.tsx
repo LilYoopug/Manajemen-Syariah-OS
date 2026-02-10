@@ -7,7 +7,7 @@ import {
   BriefcaseIcon, TrashIcon, PlusCircleIcon, PencilIcon, CheckIcon,
   ClipboardListIcon
 } from './Icons';
-import type { DirectoryItem, View } from '../types';
+import type { DirectoryItem, View } from '@/types';
 
 interface SidebarProps {
   view: View;

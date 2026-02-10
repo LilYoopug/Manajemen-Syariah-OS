@@ -15,7 +15,7 @@ import AdminDashboard from './components/AdminDashboard';
 import AdminUserManager from './components/AdminUserManager';
 import AdminToolManager from './components/AdminToolManager';
 import { HomeIcon } from './components/Icons';
-import type { DirectoryItem, View } from './types';
+import type { DirectoryItem, View } from '@/types';
 import { getKpiDataForPeriod, getGoalsDataForPeriod, DIRECTORY_DATA as INITIAL_DIRECTORY } from './constants';
 import useLocalStorage from './hooks/useLocalStorage';
 

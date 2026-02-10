@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { TOOLS_DATA } from '../constants';
 import ToolDetailModal from './ToolDetailModal';
-import type { Tool } from '../types';
-import { ToolCategory } from '../types';
+import type { Tool } from '@/types';
+import { ToolCategory } from '@/types';
 import { LinkIcon } from './Icons';
 
 const ToolCard: React.FC<{ tool: Tool; onSelect: (tool: Tool) => void }> = ({ tool, onSelect }) => (

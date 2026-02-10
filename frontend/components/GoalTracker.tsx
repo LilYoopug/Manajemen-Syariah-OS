@@ -1,6 +1,6 @@
 
 import React from 'react';
-import type { Goal } from '../types';
+import type { Goal } from '@/types';
 
 const GoalTracker: React.FC<Goal> = ({ title, target, progress, unit }) => {
   const percentage = Math.min(Math.round((progress / target) * 100), 100);

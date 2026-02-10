@@ -8,7 +8,7 @@ import {
   PlusCircleIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon,
   BookOpenIcon, ChevronRightIcon, ChevronDownIcon
 } from './Icons';
-import type { UserProfile, View } from '../types';
+import type { UserProfile, View } from '@/types';
 
 interface SettingsProps {
   toggleTheme: () => void;

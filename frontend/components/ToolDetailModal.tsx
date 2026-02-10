@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import type { Tool, DirectoryItem } from '../types';
+import type { Tool, DirectoryItem } from '@/types';
 import { XMarkIcon, BookOpenIcon, LinkIcon } from './Icons';
 import { DIRECTORY_DATA } from '../constants';
 

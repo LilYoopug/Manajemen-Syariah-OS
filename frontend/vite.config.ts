@@ -16,6 +16,7 @@ export default defineConfig(({ mode }) => {
       },
       resolve: {
         alias: {
+          '@/types': path.resolve(__dirname, './src/types/index.ts'),
           '@': path.resolve(__dirname, '.'),
         }
       }

@@ -4,7 +4,7 @@ import { getKpiDataForPeriod, getGoalsDataForPeriod } from '../constants';
 import KpiCard from './KpiCard';
 import GoalTracker from './GoalTracker';
 import { DownloadIcon, CalendarDaysIcon } from './Icons';
-import type { Goal, Kpi } from '../types';
+import type { Goal, Kpi } from '@/types';
 import AIInsightCard from './AIInsightCard';
 
 declare const Recharts: any;

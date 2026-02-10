@@ -8,8 +8,8 @@ import {
     XMarkIcon, LinkIcon, MagnifyingGlassIcon, FunnelIcon, CalendarIcon,
     ChevronDownIcon 
 } from './Icons';
-import type { Tool } from '../types';
-import { ToolCategory } from '../types';
+import type { Tool } from '@/types';
+import { ToolCategory } from '@/types';
 
 const AdminToolManager: React.FC = () => {
   // Initialize with base data and ensure createdAt exists for existing mock data

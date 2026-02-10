@@ -5,7 +5,7 @@ import {
     UserIcon, TrashIcon, CheckCircleIcon, XMarkIcon, 
     Cog6ToothIcon, DownloadIcon, ChevronRightIcon 
 } from './Icons';
-import type { User } from '../types';
+import type { User } from '@/types';
 
 declare const jsPDF: any;
 declare const XLSX: any;

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DirectoryItem } from '../types';
+import type { DirectoryItem } from '@/types';
 import { XMarkIcon } from './Icons';
 
 interface DirectoryDetailModalProps {

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
-import type { Task, ResetCycle, HistoryEntry } from '../types';
+import type { Task, ResetCycle, HistoryEntry } from '@/types';
 import { 
     TrashIcon, CheckIcon, XMarkIcon, 
     ClipboardListIcon, PlusCircleIcon, PencilIcon, 

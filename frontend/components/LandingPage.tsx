@@ -6,7 +6,7 @@ import {
   CheckCircleIcon, UserIcon, BriefcaseIcon, UsersIcon,
   MenuIcon, XMarkIcon
 } from './Icons';
-import type { View } from '../types';
+import type { View } from '@/types';
 
 interface LandingPageProps {
   onEnter: () => void;
