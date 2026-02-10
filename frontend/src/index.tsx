@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from '@/App';
 
 // Ekspos React ke global agar library UMD (seperti Recharts) bisa menemukannya
 (window as any).React = React;

@@ -2,10 +2,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getKpiDataForPeriod, getGoalsDataForPeriod } from '@/constants';
 import KpiCard from '@/components/common/KpiCard';
-import GoalTracker from './GoalTracker';
+import GoalTracker from '@/components/dashboard/GoalTracker';
 import { DownloadIcon, CalendarDaysIcon } from '@/components/common/Icons';
 import type { Goal, Kpi } from '@/types';
-import AIInsightCard from '@/src/components/ai/AIInsightCard';
+import AIInsightCard from '@/components/ai/AIInsightCard';
 
 declare const Recharts: any;
 declare const jsPDF: any;

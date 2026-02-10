@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { TOOLS_DATA } from '@/constants';
-import ToolDetailModal from './ToolDetailModal';
+import ToolDetailModal from '@/components/dashboard/ToolDetailModal';
 import type { Tool } from '@/types';
 import { ToolCategory } from '@/types';
 import { LinkIcon } from '@/components/common/Icons';
