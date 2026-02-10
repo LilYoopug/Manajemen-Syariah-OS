@@ -447,51 +447,49 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 />
                                 ))}
                             </div>
-                          </>
-                        )}
 
-                        {editMode && (
-                          <div className="mt-2 space-y-2">
-                             {isAddingRootInline ? (
-                               <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-primary-200 dark:border-primary-900/30 animate-fadeIn">
-                                 <form onSubmit={handleConfirmAddRoot} className="flex items-center space-x-2">
-                                    <input 
-                                      autoFocus
-                                      type="text"
-                                      value={newRootTitle}
-                                      onChange={(e) => setNewRootTitle(e.target.value)}
-                                      placeholder="Judul Directory Utama"
-                                      className="flex-1 bg-white dark:bg-gray-800 border-none text-xs p-1.5 rounded focus:ring-1 focus:ring-primary-500 outline-none"
-                                    />
-                                    <button 
-                                      type="submit"
-                                      className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                                      title="Simpan"
-                                    >
-                                      <CheckIcon className="w-4 h-4" />
-                                    </button>
-                                    <button 
-                                      type="button"
-                                      onClick={() => { setIsAddingRootInline(false); setNewRootTitle(''); }}
-                                      className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                                      title="Batal"
-                                    >
-                                      <XMarkIcon className="w-4 h-4" />
-                                    </button>
-                                 </form>
-                               </div>
-                             ) : (
-                               <button 
-                                 type="button"
-                                 onClick={() => setIsAddingRootInline(true)}
-                                 className="flex items-center w-full px-4 py-2 text-xs font-bold text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg border border-dashed border-primary-300 dark:border-primary-800 transition-all"
-                               >
-                                  <PlusCircleIcon className="w-4 h-4 mr-2" />
-                                  Tambah Directory Utama
-                               </button>
-                             )}
-                           </div>
-                         )}
+                            {!isDirectoryLoading && editMode && (
+                              <div className="mt-2 space-y-2">
+                                 {isAddingRootInline ? (
+                                   <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-primary-200 dark:border-primary-900/30 animate-fadeIn">
+                                     <form onSubmit={handleConfirmAddRoot} className="flex items-center space-x-2">
+                                        <input 
+                                          autoFocus
+                                          type="text"
+                                          value={newRootTitle}
+                                          onChange={(e) => setNewRootTitle(e.target.value)}
+                                          placeholder="Judul Directory Utama"
+                                          className="flex-1 bg-white dark:bg-gray-800 border-none text-xs p-1.5 rounded focus:ring-1 focus:ring-primary-500 outline-none"
+                                        />
+                                        <button 
+                                          type="submit"
+                                          className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                                          title="Simpan"
+                                        >
+                                          <CheckIcon className="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                          type="button"
+                                          onClick={() => { setIsAddingRootInline(false); setNewRootTitle(''); }}
+                                          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                                          title="Batal"
+                                        >
+                                          <XMarkIcon className="w-4 h-4" />
+                                        </button>
+                                     </form>
+                                   </div>
+                                 ) : (
+                                   <button 
+                                     type="button"
+                                     onClick={() => setIsAddingRootInline(true)}
+                                     className="flex items-center w-full px-4 py-2 text-xs font-bold text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg border border-dashed border-primary-300 dark:border-primary-800 transition-all"
+                                   >
+                                      <PlusCircleIcon className="w-4 h-4 mr-2" />
+                                      Tambah Directory Utama
+                                   </button>
+                                 )}
+                              </div>
+                            )}
                           </>
                         )}
                        </div>
