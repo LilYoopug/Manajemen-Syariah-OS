@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { TOOLS_DATA } from '@/constants';
 // FIX: Import ChevronDownIcon to resolve 'Cannot find name' errors on lines 142 and 159.
@@ -8,6 +8,7 @@ import {
     XMarkIcon, LinkIcon, MagnifyingGlassIcon, FunnelIcon, CalendarIcon,
     ChevronDownIcon 
 } from '@/components/common/Icons';
+import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 import type { Tool } from '@/types';
 import { ToolCategory } from '@/types';
 
@@ -23,6 +24,16 @@ const AdminToolManager: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ToolCategory | 'Semua'>('Semua');
   const [sortByDate, setSortByDate] = useState<'newest' | 'oldest'>('newest');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchTools = async () => {
+      setIsLoading(true);
+      setTimeout(() => setIsLoading(false), 600);
+    };
+    fetchTools();
+  }, []);
 
   const filteredTools = useMemo(() => {
     const query = searchQuery.toLowerCase();
@@ -78,9 +89,11 @@ const AdminToolManager: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveTool = (e: React.FormEvent) => {
+  const handleSaveTool = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTool) {
+      setIsSubmitting(true);
+      await new Promise(resolve => setTimeout(resolve, 800));
       const toolToSave = { ...editingTool, createdAt: editingTool.createdAt || Date.now() } as Tool;
       const exists = tools.some(t => t.id === toolToSave.id);
       if (exists) {
@@ -88,6 +101,7 @@ const AdminToolManager: React.FC = () => {
       } else {
         setTools([toolToSave, ...tools]);
       }
+      setIsSubmitting(false);
       setIsModalOpen(false);
       setEditingTool(null);
     }
@@ -167,7 +181,32 @@ const AdminToolManager: React.FC = () => {
           </div>
       </div>
 
-      {filteredTools.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center space-x-3">
+                  <Skeleton className="w-10 h-10 rounded-lg" />
+                  <div>
+                    <Skeleton className="h-5 w-32 mb-1" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+                <div className="flex space-x-1">
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                  <Skeleton className="w-8 h-8 rounded-lg" />
+                </div>
+              </div>
+              <SkeletonText lines={2} />
+              <div className="mt-4 flex space-x-2">
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-6 w-16 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredTools.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTools.map((tool) => (
             <div key={tool.id} className="bg-white dark:bg-gray-800 p-7 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 flex flex-col hover:shadow-lg transition-all group relative">
@@ -180,13 +219,13 @@ const AdminToolManager: React.FC = () => {
                   <button type="button" onClick={(e) => deleteTool(e, tool.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-lg transition-all"><TrashIcon className="w-5 h-5"/></button>
                 </div>
               </div>
-              
+
               <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1">{tool.category}</p>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 leading-tight">{tool.name}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 flex-grow leading-relaxed line-clamp-3">
                 {tool.description}
               </p>
-              
+
               <div className="mt-5 pt-4 border-t border-gray-50 dark:border-gray-700 flex flex-col space-y-2">
                 <div className="flex items-center text-[9px] font-bold text-gray-400">
                     <CalendarIcon className="w-2.5 h-2.5 mr-1 text-gray-400/60" />
@@ -275,7 +314,16 @@ const AdminToolManager: React.FC = () => {
                     </div>
 
                     <div className="pt-4">
-                        <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition active:scale-[0.98]">Simpan ke Katalog</button>
+                        <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center">
+                            {isSubmitting ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Menyimpan...
+                              </>
+                            ) : (
+                              'Simpan ke Katalog'
+                            )}
+                        </button>
                     </div>
                 </form>
             </div>
