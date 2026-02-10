@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@/types': path.resolve(__dirname, './src/types/index.ts'),
+          '@/constants': path.resolve(__dirname, './src/constants/index.ts'),
           '@': path.resolve(__dirname, '.'),
         }
       }
