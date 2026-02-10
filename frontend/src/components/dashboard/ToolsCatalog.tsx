@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TOOLS_DATA } from '@/constants';
 import ToolDetailModal from '@/components/dashboard/ToolDetailModal';
 import type { Tool } from '@/types';
 import { ToolCategory } from '@/types';
 import { LinkIcon } from '@/components/common/Icons';
+import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 
 const ToolCard: React.FC<{ tool: Tool; onSelect: (tool: Tool) => void }> = ({ tool, onSelect }) => (
   <div 
@@ -39,6 +40,16 @@ const ToolCard: React.FC<{ tool: Tool; onSelect: (tool: Tool) => void }> = ({ to
 const ToolsCatalog: React.FC = () => {
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTools = async () => {
+      setIsLoading(true);
+      // Simulate API - replace with real API later
+      setTimeout(() => setIsLoading(false), 500);
+    };
+    fetchTools();
+  }, []);
 
   const categories = ['All', ...Object.values(ToolCategory)];
   const filteredTools = activeCategory === 'All' ? TOOLS_DATA : TOOLS_DATA.filter(tool => tool.category === activeCategory);
@@ -66,11 +77,32 @@ const ToolsCatalog: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredTools.map(tool => (
-          <ToolCard key={tool.id} tool={tool} onSelect={setSelectedTool} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center space-x-4 mb-4">
+                <Skeleton className="w-12 h-12 rounded-xl" />
+                <div className="flex-1">
+                  <Skeleton className="h-5 w-3/4 mb-2" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+              <SkeletonText lines={2} />
+              <div className="mt-4 flex space-x-2">
+                <Skeleton className="h-8 w-20 rounded-full" />
+                <Skeleton className="h-8 w-20 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredTools.map(tool => (
+            <ToolCard key={tool.id} tool={tool} onSelect={setSelectedTool} />
+          ))}
+        </div>
+      )}
 
       {selectedTool && (
         <ToolDetailModal tool={selectedTool} onClose={() => setSelectedTool(null)} />
