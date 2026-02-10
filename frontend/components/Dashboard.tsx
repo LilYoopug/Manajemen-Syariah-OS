@@ -5,7 +5,7 @@ import KpiCard from '@/components/common/KpiCard';
 import GoalTracker from './GoalTracker';
 import { DownloadIcon, CalendarDaysIcon } from '@/components/common/Icons';
 import type { Goal, Kpi } from '@/types';
-import AIInsightCard from './AIInsightCard';
+import AIInsightCard from '@/src/components/ai/AIInsightCard';
 
 declare const Recharts: any;
 declare const jsPDF: any;
