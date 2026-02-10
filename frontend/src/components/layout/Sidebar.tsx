@@ -7,6 +7,7 @@ import {
   BriefcaseIcon, TrashIcon, PlusCircleIcon, PencilIcon, CheckIcon,
   ClipboardListIcon
 } from '@/components/common/Icons';
+import { Skeleton } from '@/components/common/Skeleton';
 import type { DirectoryItem, View } from '@/types';
 
 interface SidebarProps {
@@ -17,6 +18,7 @@ interface SidebarProps {
   onSelectItem: (item: DirectoryItem) => void;
   directoryData: DirectoryItem[];
   setDirectoryData: React.Dispatch<React.SetStateAction<DirectoryItem[]>>;
+  isDirectoryLoading?: boolean;
 }
 
 const DirectorySidebarNode: React.FC<{ 
@@ -169,7 +171,7 @@ const DirectorySidebarNode: React.FC<{
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   view, setView, isSidebarOpen, setSidebarOpen, onSelectItem,
-  directoryData, setDirectoryData 
+  directoryData, setDirectoryData, isDirectoryLoading = false
 }) => {
   const [isDirectoryOpen, setDirectoryOpen] = useState(true);
   const [directorySearch, setDirectorySearch] = useState('');
@@ -407,32 +409,46 @@ const Sidebar: React.FC<SidebarProps> = ({
 
                     {isDirectoryOpen && (
                       <div className="mt-2 space-y-1">
-                         <div className="px-2 pb-2">
-                            <input
-                                type="text"
-                                placeholder="Cari wawasan..."
-                                value={directorySearch}
-                                onChange={(e) => setDirectorySearch(e.target.value)}
-                                className="w-full px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
-                            />
-                        </div>
-                        <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
-                            {filteredDirectoryData.map(item => (
-                            <DirectorySidebarNode 
-                                key={item.id} 
-                                item={item} 
-                                level={0} 
-                                onSelectItem={onSelectItem} 
-                                closeSidebar={() => setSidebarOpen(false)} 
-                                allOpen={!!directorySearch}
-                                editMode={editMode}
-                                onEdit={handleEditItem}
-                                onDelete={handleDeleteItem}
-                                onAddChild={handleAddChild}
-                                onUpdateTitle={handleUpdateTitle}
-                            />
+                        {isDirectoryLoading ? (
+                          <div className="mt-6 space-y-2">
+                            <Skeleton className="h-4 w-24 mb-3" />
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <div key={i} className="flex items-center space-x-3 p-2 rounded-lg">
+                                <Skeleton className="w-4 h-4" />
+                                <Skeleton className="h-4 w-40" />
+                              </div>
                             ))}
-                        </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="px-2 pb-2">
+                                <input
+                                    type="text"
+                                    placeholder="Cari wawasan..."
+                                    value={directorySearch}
+                                    onChange={(e) => setDirectorySearch(e.target.value)}
+                                    className="w-full px-3 py-1.5 text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-transparent rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                />
+                            </div>
+                            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar">
+                                {filteredDirectoryData.map(item => (
+                                <DirectorySidebarNode 
+                                    key={item.id} 
+                                    item={item} 
+                                    level={0} 
+                                    onSelectItem={onSelectItem} 
+                                    closeSidebar={() => setSidebarOpen(false)} 
+                                    allOpen={!!directorySearch}
+                                    editMode={editMode}
+                                    onEdit={handleEditItem}
+                                    onDelete={handleDeleteItem}
+                                    onAddChild={handleAddChild}
+                                    onUpdateTitle={handleUpdateTitle}
+                                />
+                                ))}
+                            </div>
+                          </>
+                        )}
 
                         {editMode && (
                           <div className="mt-2 space-y-2">
@@ -474,10 +490,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                                   Tambah Directory Utama
                                </button>
                              )}
-                          </div>
+                           </div>
+                         )}
+                          </>
                         )}
-                      </div>
-                    )}
+                       </div>
+                     )}
                 </div>
             )}
           </nav>

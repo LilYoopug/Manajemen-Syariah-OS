@@ -8,6 +8,7 @@ import {
   PlusCircleIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon,
   BookOpenIcon, ChevronRightIcon, ChevronDownIcon
 } from '@/components/common/Icons';
+import { Skeleton, SkeletonAvatar, SkeletonInput, SkeletonButton, SkeletonText } from '@/components/common/Skeleton';
 import type { UserProfile, View } from '@/types';
 
 interface SettingsProps {
@@ -34,6 +35,8 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,6 +44,16 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
   useEffect(() => {
     setProfile(persistedProfile);
   }, [persistedProfile]);
+
+  // Simulate API fetch with loading state
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      setIsImageLoading(true);
+      setTimeout(() => setIsLoading(false), 500);
+    };
+    fetchProfile();
+  }, []);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,58 +190,85 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
                         )}
                     </div>
 
-                    <div className="flex flex-col items-center space-y-4 mb-8">
-                        <div className="relative group">
-                            <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
-                                <img 
-                                    src={profile.profilePicture || 'https://picsum.photos/200'} 
-                                    alt="Profile" 
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                />
+                    {isLoading ? (
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
+                            <div className="flex items-center space-x-6 mb-6">
+                                <SkeletonAvatar size="lg" />
+                                <div className="flex-1">
+                                    <Skeleton className="h-6 w-48 mb-2" />
+                                    <Skeleton className="h-4 w-32" />
+                                </div>
                             </div>
-                            <button 
-                                onClick={() => {
-                                    setNewPfpUrl(profile.profilePicture || '');
-                                    setIsPfpModalOpen(true);
-                                }}
-                                className="absolute -bottom-2 -right-2 p-3 bg-primary-600 text-white rounded-2xl shadow-lg hover:bg-primary-700 transition active:scale-90 border-2 border-white dark:border-gray-800"
-                                title="Edit Foto Profil"
-                            >
-                                <CameraIcon className="w-5 h-5" />
-                            </button>
+                            <div className="space-y-4">
+                                <div>
+                                    <Skeleton className="h-4 w-24 mb-2" />
+                                    <SkeletonInput />
+                                </div>
+                                <div className="flex justify-end">
+                                    <SkeletonButton />
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Profil Pengguna</p>
-                    </div>
+                    ) : (
+                        <>
+                            <div className="flex flex-col items-center space-y-4 mb-8">
+                                <div className="relative group">
+                                    <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-gray-700 bg-gray-100 dark:bg-gray-900 relative">
+                                        {isImageLoading && (
+                                            <SkeletonAvatar size="lg" className="absolute inset-0 z-10" />
+                                        )}
+                                        <img 
+                                            src={profile.profilePicture || 'https://picsum.photos/200'} 
+                                            alt="Profile" 
+                                            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                                            onLoad={() => setIsImageLoading(false)}
+                                        />
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            setNewPfpUrl(profile.profilePicture || '');
+                                            setIsPfpModalOpen(true);
+                                        }}
+                                        className="absolute -bottom-2 -right-2 p-3 bg-primary-600 text-white rounded-2xl shadow-lg hover:bg-primary-700 transition active:scale-90 border-2 border-white dark:border-gray-800"
+                                        title="Edit Foto Profil"
+                                    >
+                                        <CameraIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Profil Pengguna</p>
+                            </div>
 
-                    <form onSubmit={handleSaveProfile} className="space-y-6">
-                        <div>
-                            <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Nama Lengkap / Instansi</label>
-                            <input 
-                                required
-                                type="text" 
-                                value={profile.name} 
-                                onChange={(e) => setProfile({...profile, name: e.target.value})}
-                                className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-primary-500 text-gray-800 dark:text-gray-200 shadow-sm outline-none transition-all" 
-                            />
-                        </div>
-                        
-                        <div className="pt-4">
-                            <button 
-                                type="submit"
-                                disabled={saveStatus === 'saving'}
-                                className="w-full py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl hover:bg-primary-700 transition active:scale-[0.98] flex items-center justify-center space-x-2 disabled:bg-primary-400"
-                            >
-                                {saveStatus === 'saving' ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                ) : (
-                                    <>
-                                        <CheckIcon className="w-5 h-5" />
-                                        <span>Simpan Profil</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </form>
+                            <form onSubmit={handleSaveProfile} className="space-y-6">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Nama Lengkap / Instansi</label>
+                                    <input 
+                                        required
+                                        type="text" 
+                                        value={profile.name} 
+                                        onChange={(e) => setProfile({...profile, name: e.target.value})}
+                                        className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-primary-500 text-gray-800 dark:text-gray-200 shadow-sm outline-none transition-all" 
+                                    />
+                                </div>
+                                
+                                <div className="pt-4">
+                                    <button 
+                                        type="submit"
+                                        disabled={saveStatus === 'saving'}
+                                        className="w-full py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl hover:bg-primary-700 transition active:scale-[0.98] flex items-center justify-center space-x-2 disabled:bg-primary-400"
+                                    >
+                                        {saveStatus === 'saving' ? (
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        ) : (
+                                            <>
+                                                <CheckIcon className="w-5 h-5" />
+                                                <span>Simpan Profil</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </>
+                    )}
                 </div>
             )}
 
