@@ -155,4 +155,56 @@ class ProfileController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
     }
+
+    /**
+     * Reset all user data to initial state.
+     *
+     * @return JsonResponse
+     */
+    public function reset(): JsonResponse
+    {
+        $user = request()->user();
+
+        // Default categories to re-seed after reset
+        $defaultCategories = [
+            'SDM',
+            'Keuangan',
+            'Kepatuhan',
+            'Pemasaran',
+            'Operasional',
+            'Teknologi',
+        ];
+
+        // Wrap all destructive operations in a transaction
+        DB::transaction(function () use ($user, $defaultCategories): void {
+            // 1. Delete all tasks (history cascades via foreign key)
+            $user->tasks()->delete();
+
+            // 2. Delete all categories
+            $user->categories()->delete();
+
+            // 3. Re-seed default categories
+            $categories = array_map(
+                fn ($name) => ['name' => $name],
+                $defaultCategories
+            );
+            $user->categories()->createMany($categories);
+
+            // 4. Reset profile settings to defaults
+            $user->update([
+                'theme' => 'light',
+                'profile_picture' => null,
+                'zakat_rate' => null,
+                'preferred_akad' => null,
+                'calculation_method' => null,
+            ]);
+
+            // 5. Log the reset activity
+            $this->activityLogService->log('user.data_reset', $user->id);
+        });
+
+        return response()->json([
+            'message' => 'All your data has been reset successfully',
+        ]);
+    }
 }

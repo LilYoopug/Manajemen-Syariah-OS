@@ -62,10 +62,10 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: User Profile & Preferences (FR37-41)
-  epic-4: in-progress
+  epic-4: done
   4-1-view-and-update-profile: done
   4-2-export-user-data: done
-  4-3-reset-user-data: backlog
+  4-3-reset-user-data: done
   epic-4-retrospective: optional
 
   # Epic 5: Knowledge Directory (FR23-28)
