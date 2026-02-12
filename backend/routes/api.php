@@ -51,6 +51,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Directory routes (Epic 5)
     Route::get('/directory', [\App\Http\Controllers\Api\DirectoryController::class, 'index']);
+    Route::post('/directory', [\App\Http\Controllers\Api\DirectoryController::class, 'store']);
+    Route::put('/directory/{id}', [\App\Http\Controllers\Api\DirectoryController::class, 'update']);
+    Route::delete('/directory/{id}', [\App\Http\Controllers\Api\DirectoryController::class, 'destroy']);
 
     // Tools routes (Epic 6)
     // AI routes (Epic 7)
