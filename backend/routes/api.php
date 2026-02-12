@@ -34,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
     Route::get('/tasks', [\App\Http\Controllers\Api\TaskController::class, 'index']);
     Route::post('/tasks', [\App\Http\Controllers\Api\TaskController::class, 'store']);
+    Route::put('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'update']);
+    Route::delete('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'destroy']);
 
     // Dashboard routes (Epic 3)
     // Directory routes (Epic 5)

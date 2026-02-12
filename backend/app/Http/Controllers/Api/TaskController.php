@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
+use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use App\Services\ActivityLogService;
@@ -95,5 +96,97 @@ class TaskController extends Controller
             'message' => 'Task created successfully',
             'data' => new TaskResource($task),
         ], 201);
+    }
+
+    /**
+     * Update the specified task.
+     *
+     * @param UpdateTaskRequest $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function update(UpdateTaskRequest $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Find task scoped to authenticated user
+        $task = $user->tasks()->findOrFail($id);
+
+        // Update task in transaction with activity logging
+        DB::transaction(function () use ($request, $task): void {
+            $updateData = [];
+
+            if ($request->has('text')) {
+                $updateData['text'] = $request->text;
+            }
+
+            if ($request->has('category')) {
+                $updateData['category'] = $request->category;
+            }
+
+            if ($request->has('resetCycle')) {
+                $updateData['reset_cycle'] = $request->resetCycle;
+            }
+
+            if ($request->has('hasLimit')) {
+                $updateData['has_limit'] = $request->hasLimit;
+            }
+
+            if ($request->has('targetValue')) {
+                $updateData['target_value'] = $request->targetValue;
+            }
+
+            if ($request->has('unit')) {
+                $updateData['unit'] = $request->unit;
+            }
+
+            if ($request->has('incrementValue')) {
+                $updateData['increment_value'] = $request->incrementValue;
+            }
+
+            if ($request->has('perCheckEnabled')) {
+                $updateData['per_check_enabled'] = $request->perCheckEnabled;
+            }
+
+            if (!empty($updateData)) {
+                $task->update($updateData);
+
+                // Log the task update activity
+                $this->activityLogService->logCrud('task.updated', $task);
+            }
+        });
+
+        return response()->json([
+            'message' => 'Task updated successfully',
+            'data' => new TaskResource($task->fresh()),
+        ]);
+    }
+
+    /**
+     * Remove the specified task.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $user = $request->user();
+
+        // Find task scoped to authenticated user
+        $task = $user->tasks()->findOrFail($id);
+
+        // Delete task in transaction with activity logging
+        DB::transaction(function () use ($task): void {
+            // Log the task deletion activity before deletion
+            $this->activityLogService->logCrud('task.deleted', $task);
+
+            // Delete task (histories will cascade delete via foreign key)
+            $task->delete();
+        });
+
+        return response()->json([
+            'message' => 'Task deleted successfully',
+        ]);
     }
 }
