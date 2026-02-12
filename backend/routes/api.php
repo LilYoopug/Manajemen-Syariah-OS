@@ -50,6 +50,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
 
     // Directory routes (Epic 5)
+    Route::get('/directory', [\App\Http\Controllers\Api\DirectoryController::class, 'index']);
+
     // Tools routes (Epic 6)
     // AI routes (Epic 7)
 
