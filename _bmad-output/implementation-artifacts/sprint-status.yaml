@@ -47,7 +47,7 @@ development_status:
   # Epic 2: Task Management & Progress Tracking (FR6-18)
   epic-2: in-progress
   2-1-task-categories: done
-  2-2-create-tasks: backlog
+  2-2-create-tasks: done
   2-3-view-and-filter-tasks: backlog
   2-4-update-and-delete-tasks: backlog
   2-5-toggle-task-completion-with-history-recording: backlog
