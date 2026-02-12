@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\StoreTaskRequest;
+use App\Http\Requests\Task\UpdateHistoryRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
+use App\Http\Resources\TaskHistoryResource;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use App\Models\TaskHistory;
@@ -281,6 +283,118 @@ class TaskController extends Controller
         return response()->json([
             'message' => 'Task toggled successfully',
             'data' => new TaskResource($task->fresh()->load('history')),
+        ]);
+    }
+
+    /**
+     * Update a history entry.
+     *
+     * @param UpdateHistoryRequest $request
+     * @param int $taskId
+     * @param int $entryId
+     * @return JsonResponse
+     */
+    public function updateHistory(UpdateHistoryRequest $request, int $taskId, int $entryId): JsonResponse
+    {
+        $user = $request->user();
+
+        // Find task scoped to authenticated user
+        $task = $user->tasks()->findOrFail($taskId);
+
+        // Find history entry for this task
+        $historyEntry = $task->history()->findOrFail($entryId);
+
+        // Update history entry and recalculate task progress
+        DB::transaction(function () use ($request, $task, $historyEntry): void {
+            $updateData = [];
+
+            if ($request->has('value')) {
+                $updateData['value'] = $request->value;
+            }
+
+            if ($request->has('note')) {
+                $updateData['note'] = $request->note;
+            }
+
+            if (!empty($updateData)) {
+                $historyEntry->update($updateData);
+
+                // Recalculate task progress from all history entries
+                $this->recalculateTaskProgress($task);
+
+                // Log activity
+                $this->activityLogService->logCrud('history.updated', $historyEntry);
+            }
+        });
+
+        return response()->json([
+            'message' => 'History entry updated successfully',
+            'data' => new TaskHistoryResource($historyEntry->fresh()),
+        ]);
+    }
+
+    /**
+     * Delete a history entry.
+     *
+     * @param Request $request
+     * @param int $taskId
+     * @param int $entryId
+     * @return JsonResponse
+     */
+    public function destroyHistory(Request $request, int $taskId, int $entryId): JsonResponse
+    {
+        $user = $request->user();
+
+        // Find task scoped to authenticated user
+        $task = $user->tasks()->findOrFail($taskId);
+
+        // Find history entry for this task
+        $historyEntry = $task->history()->findOrFail($entryId);
+
+        // Delete history entry and recalculate task progress
+        DB::transaction(function () use ($task, $historyEntry): void {
+            // Log activity before deletion
+            $this->activityLogService->logCrud('history.deleted', $historyEntry);
+
+            // Delete the history entry
+            $historyEntry->delete();
+
+            // Recalculate task progress from remaining history entries
+            $this->recalculateTaskProgress($task);
+        });
+
+        return response()->json([
+            'message' => 'History entry deleted successfully',
+        ]);
+    }
+
+    /**
+     * Recalculate task progress from history entries.
+     *
+     * @param Task $task
+     */
+    protected function recalculateTaskProgress(Task $task): void
+    {
+        // Sum all history values for current value
+        $totalValue = $task->history()->sum('value');
+
+        // Calculate progress (for tasks with limits)
+        $progress = 0;
+        $completed = false;
+
+        if ($task->has_limit && $task->target_value > 0) {
+            $progress = min(100, (int) round(($totalValue / $task->target_value) * 100));
+            $completed = $totalValue >= $task->target_value;
+        } else {
+            // For non-limit tasks, check if any history entry exists with value > 0
+            $completed = $totalValue > 0;
+            $progress = $completed ? 100 : 0;
+        }
+
+        $task->update([
+            'current_value' => $totalValue,
+            'progress' => $progress,
+            'completed' => $completed,
         ]);
     }
 }

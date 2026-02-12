@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'update']);
     Route::patch('/tasks/{id}/toggle', [\App\Http\Controllers\Api\TaskController::class, 'toggle']);
     Route::delete('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'destroy']);
+    Route::put('/tasks/{id}/history/{entryId}', [\App\Http\Controllers\Api\TaskController::class, 'updateHistory']);
+    Route::delete('/tasks/{id}/history/{entryId}', [\App\Http\Controllers\Api\TaskController::class, 'destroyHistory']);
 
     // Dashboard routes (Epic 3)
     // Directory routes (Epic 5)
