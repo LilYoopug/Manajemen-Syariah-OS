@@ -1,1 +1,8 @@
 *.zip
+# BMAD Automation (auto-added)
+__pycache__/
+*.py[cod]
+.claude/bmad-progress.json
+.claude/bmad-automation.tracking.json
+.claude/bmad-verifier-progress.json
+.claude/bmad-stop

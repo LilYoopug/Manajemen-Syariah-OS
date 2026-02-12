@@ -1,0 +1,179 @@
+# Project Documentation Index
+
+## Manajemen Syariah OS (MSYV2)
+
+**Primary AI Retrieval Source** - Use this index to navigate all project documentation.
+
+---
+
+## Project Overview
+
+- **Type:** Monorepo with 4 parts
+- **Primary Language:** TypeScript
+- **Framework:** React 19.1.1 with Vite 6.4.1
+- **Architecture:** Component-Based with Feature-First Organization
+
+### Quick Reference
+
+#### Frontend Web Application
+
+- **Type:** Web (React SPA)
+- **Tech Stack:** React 19 + TypeScript 5.8 + Vite 6.4 + Tailwind CSS
+- **Root:** `/frontend`
+- **Entry Point:** `src/index.tsx`
+
+#### BMAD Framework
+
+- **Type:** Infrastructure/Tooling
+- **Tech Stack:** BMAD Workflows & Agents
+- **Root:** `/_bmad`
+
+#### Project Documentation
+
+- **Type:** Documentation
+- **Tech Stack:** Markdown
+- **Root:** `/docs`
+
+#### OpenCode IDE Integration
+
+- **Type:** Configuration
+- **Tech Stack:** IDE Configuration
+- **Root:** `/.opencode`
+
+---
+
+## Generated Documentation
+
+### Core Documents
+
+- [Project Overview](./project-overview.md) - Executive summary, features, tech stack
+- [Architecture](./architecture.md) - System architecture, patterns, data flow
+- [Source Tree Analysis](./source-tree-analysis.md) - Complete directory structure
+- [Component Inventory](./component-inventory.md) - All React components catalog
+- [Development Guide](./development-guide.md) - Setup, workflow, coding standards
+- [Data Models](./data-models.md) - TypeScript interfaces and data structures
+
+### Additional Documentation
+
+- [API Contracts](./api-contracts.md) _(To be generated)_ - API endpoint documentation
+
+---
+
+## Existing Documentation
+
+- [Icon Usage Guide](./icon-usage.md) - Lucide React icon patterns and usage
+- [Loading States Guide](./loading-states.md) - Skeleton loading component patterns
+- [API Loading Guide](./api-loading-guide.md) - API-ready skeleton loading patterns
+
+### Implementation Plans
+
+- [2025-02-10-api-ready-skeleton-loading.md](./plans/2025-02-10-api-ready-skeleton-loading.md)
+- [2025-02-10-frontend-folder-reorganization.md](./plans/2025-02-10-frontend-folder-reorganization.md)
+- [2025-02-10-lucide-icons-migration.md](./plans/2025-02-10-lucide-icons-migration.md)
+- [2025-02-10-skeleton-loading-states.md](./plans/2025-02-10-skeleton-loading-states.md)
+
+### Verification Logs
+
+- [icon-migration-test-log.md](./verification/icon-migration-test-log.md)
+
+---
+
+## Getting Started
+
+### Quick Start
+
+```bash
+# Navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install
+
+# Set up environment
+echo "GEMINI_API_KEY=your_key_here" > .env.local
+
+# Start development server
+npm run dev
+```
+
+### Documentation for AI Context
+
+When working with this codebase, provide these documents as context:
+
+1. **For general understanding:** [Project Overview](./project-overview.md)
+2. **For architecture decisions:** [Architecture](./architecture.md)
+3. **For component changes:** [Component Inventory](./component-inventory.md)
+4. **For data structure changes:** [Data Models](./data-models.md)
+5. **For adding features:** [Development Guide](./development-guide.md)
+
+---
+
+## Project Statistics
+
+- **Total Files:** 333
+- **React Components:** 24
+- **Type Definitions:** 1 file (multiple interfaces)
+- **Custom Hooks:** 1 (useLocalStorage)
+- **Documentation Files:** 10+ generated
+
+---
+
+## Key Technologies
+
+| Category | Technology |
+|----------|------------|
+| Frontend Framework | React 19.1.1 |
+| Language | TypeScript 5.8.2 |
+| Build Tool | Vite 6.4.1 |
+| Styling | Tailwind CSS |
+| Icons | Lucide React |
+| Charts | Recharts 3.7.0 |
+| AI | Google GenAI (Gemini) |
+
+---
+
+## Repository Structure Summary
+
+```
+MSYV2/
+├── frontend/          # Main React application
+│   ├── src/
+│   │   ├── components/  # 24 React components
+│   │   ├── constants/   # Static data & generators
+│   │   ├── hooks/       # Custom hooks
+│   │   ├── lib/         # Utilities
+│   │   └── types/       # TypeScript definitions
+│   └── ...config files
+├── _bmad/             # BMAD framework
+├── docs/              # This documentation
+└── .opencode/         # IDE integration
+```
+
+---
+
+## Features Overview
+
+1. **Dashboard** - KPI tracking, goals, charts, AI insights
+2. **Directory Wawasan** - Hierarchical Islamic knowledge base
+3. **Tools Catalog** - 25+ Syariah management tools
+4. **Task Manager** - Advanced task tracking with history
+5. **AI Assistant** - Gemini-powered chat with context
+6. **Admin Panel** - User and tool management
+7. **Theme Support** - Light/Dark mode
+
+---
+
+## Brownfield PRD Context
+
+This documentation was generated for brownfield (existing) project analysis. When creating new features:
+
+1. Reference [Architecture](./architecture.md) for patterns
+2. Follow [Development Guide](./development-guide.md) standards
+3. Use [Component Inventory](./component-inventory.md) for reuse
+4. Check [Data Models](./data-models.md) for type consistency
+
+---
+
+*Generated by BMad Master - Document Project Workflow v1.2.0*
+*Date: 2026-02-11*
+*Scan Level: Exhaustive*
