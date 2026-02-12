@@ -41,7 +41,7 @@ development_status:
   1-2-user-registration: done
   1-3-user-login: done
   1-4-user-logout: done
-  1-5-admin-route-protection-middleware: backlog
+  1-5-admin-route-protection-middleware: done
   epic-1-retrospective: optional
 
   # Epic 2: Task Management & Progress Tracking (FR6-18)

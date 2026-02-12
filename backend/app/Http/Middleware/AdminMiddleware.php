@@ -15,9 +15,17 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || !$request->user()->isAdmin()) {
+        // Check if user is authenticated (should be via auth:sanctum middleware)
+        if (!$request->user()) {
             return response()->json([
-                'message' => 'Unauthorized.',
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        // Check if user has admin role
+        if (!$request->user()->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized',
             ], 403);
         }
 
