@@ -36,7 +36,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Project Foundation & User Authentication (FR1-5)
-  epic-1: in-progress
+  epic-1: done
   1-1-laravel-project-initialization: done
   1-2-user-registration: done
   1-3-user-login: done
@@ -45,8 +45,8 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Task Management & Progress Tracking (FR6-18)
-  epic-2: backlog
-  2-1-task-categories: backlog
+  epic-2: in-progress
+  2-1-task-categories: done
   2-2-create-tasks: backlog
   2-3-view-and-filter-tasks: backlog
   2-4-update-and-delete-tasks: backlog
