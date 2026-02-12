@@ -45,14 +45,14 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Task Management & Progress Tracking (FR6-18)
-  epic-2: in-progress
+  epic-2: done
   2-1-task-categories: done
   2-2-create-tasks: done
   2-3-view-and-filter-tasks: done
   2-4-update-and-delete-tasks: done
   2-5-toggle-task-completion-with-history-recording: done
   2-6-edit-and-delete-history-entries: done
-  2-7-automated-task-reset-scheduler: backlog
+  2-7-automated-task-reset-scheduler: done
   epic-2-retrospective: optional
 
   # Epic 3: Dashboard & Performance Insights (FR19-22)

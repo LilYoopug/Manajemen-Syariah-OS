@@ -20,4 +20,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Task reset scheduler (Story 2.7)
-// Schedule::command('tasks:reset')->daily();
+Schedule::command('tasks:reset')->daily();
