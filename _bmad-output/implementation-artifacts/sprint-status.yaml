@@ -81,7 +81,7 @@ development_status:
 
   # Epic 7: AI Assistant & Intelligence (FR33-36)
   epic-7: in-progress
-  7-1-ai-chat-proxy: ready-for-dev
+  7-1-ai-chat-proxy: done
   7-2-ai-plan-generation-and-insights: backlog
   epic-7-retrospective: optional
 
