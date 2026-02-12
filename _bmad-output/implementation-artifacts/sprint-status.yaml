@@ -56,9 +56,9 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Dashboard & Performance Insights (FR19-22)
-  epic-3: in-progress
+  epic-3: done
   3-1-dashboard-kpi-and-goal-computation: done
-  3-2-dashboard-chart-trend-data: backlog
+  3-2-dashboard-chart-trend-data: done
   epic-3-retrospective: optional
 
   # Epic 4: User Profile & Preferences (FR37-41)
