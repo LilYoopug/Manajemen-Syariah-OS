@@ -84,4 +84,75 @@ class ProfileController extends Controller
             'data' => new ProfileResource($user->fresh()),
         ]);
     }
+
+    /**
+     * Export all user data as a downloadable JSON file.
+     *
+     * @return JsonResponse
+     */
+    public function export(): JsonResponse
+    {
+        $user = request()->user();
+
+        // Gather all user data scoped by ownership
+        $tasks = $user->tasks()->with('history')->get();
+        $categories = $user->categories()->get();
+
+        // Build export data structure
+        $exportData = [
+            'exportedAt' => now()->toISOString(),
+            'profile' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'theme' => $user->theme,
+                'profilePicture' => $user->profile_picture,
+                'zakatRate' => $user->zakat_rate,
+                'preferredAkad' => $user->preferred_akad,
+                'calculationMethod' => $user->calculation_method,
+            ],
+            'tasks' => $tasks->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'text' => $task->text,
+                    'completed' => $task->completed,
+                    'category' => $task->category,
+                    'progress' => $task->progress,
+                    'hasLimit' => $task->has_limit,
+                    'currentValue' => $task->current_value,
+                    'targetValue' => $task->target_value,
+                    'unit' => $task->unit,
+                    'resetCycle' => $task->reset_cycle,
+                    'createdAt' => $task->created_at?->toISOString(),
+                    'updatedAt' => $task->updated_at?->toISOString(),
+                    'history' => $task->history->map(function ($entry) {
+                        return [
+                            'id' => $entry->id,
+                            'value' => $entry->value,
+                            'note' => $entry->note,
+                            'timestamp' => $entry->timestamp?->toISOString(),
+                        ];
+                    })->toArray(),
+                ];
+            })->toArray(),
+            'categories' => $categories->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                ];
+            })->toArray(),
+        ];
+
+        // Log the export activity
+        DB::transaction(function () use ($user): void {
+            $this->activityLogService->log('user.data_exported', $user->id);
+        });
+
+        // Return JSON response with download headers
+        $filename = 'user-data-' . now()->format('Y-m-d-His') . '.json';
+
+        return response()->json($exportData)
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
 }

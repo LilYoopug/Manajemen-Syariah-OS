@@ -29,9 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes (protected)
     Route::post('/auth/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
 
-    // User profile routes (Story 4.1)
+    // User profile routes (Story 4.1, 4.2)
     Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show']);
     Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+    Route::post('/profile/export', [\App\Http\Controllers\Api\ProfileController::class, 'export']);
 
     // Task routes (Epic 2)
     Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);

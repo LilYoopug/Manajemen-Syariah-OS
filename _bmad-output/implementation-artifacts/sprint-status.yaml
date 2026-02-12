@@ -64,7 +64,7 @@ development_status:
   # Epic 4: User Profile & Preferences (FR37-41)
   epic-4: in-progress
   4-1-view-and-update-profile: done
-  4-2-export-user-data: backlog
+  4-2-export-user-data: done
   4-3-reset-user-data: backlog
   epic-4-retrospective: optional
 
