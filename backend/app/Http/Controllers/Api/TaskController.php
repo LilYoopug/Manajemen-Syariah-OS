@@ -8,6 +8,7 @@ use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
@@ -23,6 +24,38 @@ class TaskController extends Controller
     public function __construct(ActivityLogService $activityLogService)
     {
         $this->activityLogService = $activityLogService;
+    }
+
+    /**
+     * Get the authenticated user's tasks with optional filtering.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = $request->user()->tasks();
+
+        // Filter by category
+        $query->when($request->filled('category'), function ($q) use ($request) {
+            $q->where('category', $request->category);
+        });
+
+        // Filter by text search
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $q->where('text', 'like', '%' . $request->search . '%');
+        });
+
+        // Filter by reset cycle
+        $query->when($request->filled('cycle'), function ($q) use ($request) {
+            $q->where('reset_cycle', $request->cycle);
+        });
+
+        $tasks = $query->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'data' => TaskResource::collection($tasks),
+        ]);
     }
 
     /**

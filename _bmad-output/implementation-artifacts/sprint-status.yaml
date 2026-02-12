@@ -48,7 +48,7 @@ development_status:
   epic-2: in-progress
   2-1-task-categories: done
   2-2-create-tasks: done
-  2-3-view-and-filter-tasks: backlog
+  2-3-view-and-filter-tasks: done
   2-4-update-and-delete-tasks: backlog
   2-5-toggle-task-completion-with-history-recording: backlog
   2-6-edit-and-delete-history-entries: backlog

@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // User profile routes (Story 4.1)
     // Task routes (Epic 2)
     Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
+    Route::get('/tasks', [\App\Http\Controllers\Api\TaskController::class, 'index']);
     Route::post('/tasks', [\App\Http\Controllers\Api\TaskController::class, 'store']);
 
     // Dashboard routes (Epic 3)
