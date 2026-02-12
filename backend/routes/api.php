@@ -30,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
 
     // User profile routes (Story 4.1)
+    Route::get('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'show']);
+    Route::put('/profile', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+
     // Task routes (Epic 2)
     Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
     Route::get('/tasks', [\App\Http\Controllers\Api\TaskController::class, 'index']);
