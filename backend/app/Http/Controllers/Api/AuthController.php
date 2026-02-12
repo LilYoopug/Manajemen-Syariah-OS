@@ -100,4 +100,27 @@ class AuthController extends Controller
             'data' => new UserResource($user),
         ]);
     }
+
+    /**
+     * Logout the authenticated user.
+     *
+     * @return JsonResponse
+     */
+    public function logout(): JsonResponse
+    {
+        $user = request()->user();
+
+        // Wrap token deletion and activity logging in transaction for consistency
+        DB::transaction(function () use ($user): void {
+            // Delete the current access token
+            $user->currentAccessToken()->delete();
+
+            // Log the logout activity
+            $this->activityLogService->logAuth('user.logout', $user->id);
+        });
+
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ]);
+    }
 }

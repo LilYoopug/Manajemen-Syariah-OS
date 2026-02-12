@@ -22,11 +22,13 @@ Route::get('/health', function () {
 Route::prefix('auth')->group(function () {
     Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
     Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
-    // Logout will be added in Story 1.4
 });
 
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
+    // Auth routes (protected)
+    Route::post('/auth/logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
+
     // User profile routes (Story 4.1)
     // Task routes (Epic 2)
     // Dashboard routes (Epic 3)
