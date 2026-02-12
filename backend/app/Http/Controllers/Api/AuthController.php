@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -60,5 +62,42 @@ class AuthController extends Controller
                 'data' => new UserResource($user),
             ], 201);
         });
+    }
+
+    /**
+     * Login an existing user.
+     *
+     * @param LoginRequest $request
+     * @return JsonResponse
+     */
+    public function login(LoginRequest $request): JsonResponse
+    {
+        // Find user by email
+        $user = User::where('email', $request->email)->first();
+
+        // Validate credentials
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid credentials',
+            ], 401);
+        }
+
+        // Wrap token creation and activity logging in transaction for consistency
+        $token = DB::transaction(function () use ($user): string {
+            // Create Sanctum bearer token
+            $token = $user->createToken(self::TOKEN_NAME)->plainTextToken;
+
+            // Log the login activity
+            $this->activityLogService->logAuth('user.login', $user->id);
+
+            return $token;
+        });
+
+        // Return response with token and user data
+        return response()->json([
+            'message' => 'Login successful',
+            'token' => $token,
+            'data' => new UserResource($user),
+        ]);
     }
 }
