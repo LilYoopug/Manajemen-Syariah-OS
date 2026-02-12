@@ -12,10 +12,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Seeders will be called here as they are created
-        // $this->call([
-        //     CategorySeeder::class,
-        //     ToolSeeder::class,
-        //     DirectorySeeder::class,
-        // ]);
+        $this->call([
+            CategorySeeder::class,
+            DirectorySeeder::class,
+            ToolSeeder::class,
+        ]);
     }
 }

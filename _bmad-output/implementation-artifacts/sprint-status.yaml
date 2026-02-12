@@ -69,14 +69,14 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Knowledge Directory (FR23-28)
-  epic-5: in-progress
+  epic-5: done
   5-1-directory-browse-and-seeded-content: done
-  5-2-directory-crud: in-progress
+  5-2-directory-crud: done
   epic-5-retrospective: optional
 
   # Epic 6: Tools Catalog (FR29-32)
-  epic-6: backlog
-  6-1-tools-browse-filter-and-detail: backlog
+  epic-6: in-progress
+  6-1-tools-browse-filter-and-detail: ready-for-dev
   epic-6-retrospective: optional
 
   # Epic 7: AI Assistant & Intelligence (FR33-36)

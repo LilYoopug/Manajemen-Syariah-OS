@@ -56,6 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/directory/{id}', [\App\Http\Controllers\Api\DirectoryController::class, 'destroy']);
 
     // Tools routes (Epic 6)
+    Route::get('/tools', [\App\Http\Controllers\Api\ToolController::class, 'index']);
+    Route::get('/tools/{id}', [\App\Http\Controllers\Api\ToolController::class, 'show']);
+
     // AI routes (Epic 7)
 
     // Admin routes (Epic 8)
