@@ -1,6 +1,6 @@
 # Story 6.1: Tools Browse, Filter, and Detail
 
-Status: in-progress
+Status: done
 
 ## Story
 
