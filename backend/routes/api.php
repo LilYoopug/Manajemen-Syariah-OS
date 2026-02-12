@@ -20,7 +20,8 @@ Route::get('/health', function () {
 
 // Auth routes (public)
 Route::prefix('auth')->group(function () {
-    // Registration and login will be added in Story 1.2 and 1.3
+    Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
+    // Login will be added in Story 1.3
 });
 
 // Protected routes (require authentication)
