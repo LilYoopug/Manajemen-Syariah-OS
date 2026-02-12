@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tools/{id}', [\App\Http\Controllers\Api\ToolController::class, 'show']);
 
     // AI routes (Epic 7)
+    Route::post('/ai/chat', [\App\Http\Controllers\Api\AiController::class, 'chat']);
 
     // Admin routes (Epic 8)
     Route::middleware('admin')->prefix('admin')->group(function () {
