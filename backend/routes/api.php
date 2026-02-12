@@ -42,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/tasks/{id}/history/{entryId}', [\App\Http\Controllers\Api\TaskController::class, 'destroyHistory']);
 
     // Dashboard routes (Epic 3)
+    Route::get('/dashboard', [\App\Http\Controllers\Api\DashboardController::class, 'index']);
+
     // Directory routes (Epic 5)
     // Tools routes (Epic 6)
     // AI routes (Epic 7)

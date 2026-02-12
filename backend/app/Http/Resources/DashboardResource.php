@@ -15,14 +15,19 @@ class DashboardResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'totalTasks' => $this->total_tasks ?? 0,
-            'completedTasks' => $this->completed_tasks ?? 0,
-            'completionPercentage' => $this->completion_percentage ?? 0,
-            'tasksByCategory' => $this->tasks_by_category ?? [],
-            'kepatuhanSyariahScore' => $this->kepatuhan_syariah_score ?? 0,
-            'goalProgress' => $this->goal_progress ?? [],
-            'overallGoalAchievement' => $this->overall_goal_achievement ?? 0,
-            'chartData' => $this->chart_data ?? [],
+            'kpi' => [
+                'totalTasks' => $this->kpi['totalTasks'] ?? 0,
+                'completedTasks' => $this->kpi['completedTasks'] ?? 0,
+                'completionPercentage' => $this->kpi['completionPercentage'] ?? 0,
+                'tasksByCategory' => $this->kpi['tasksByCategory'] ?? [],
+                'kepatuhanSyariahScore' => $this->kpi['kepatuhanSyariahScore'] ?? 0,
+            ],
+            'goals' => $this->goals ?? [],
+            'overallProgress' => $this->overallProgress ?? 0,
+            'chartTrend' => [
+                'labels' => $this->chartTrend['labels'] ?? [],
+                'values' => $this->chartTrend['values'] ?? [],
+            ],
         ];
     }
 }
