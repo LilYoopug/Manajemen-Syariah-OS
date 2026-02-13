@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\StreamedResponse;
 
 class UserController extends Controller
 {
@@ -97,6 +98,36 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'User deleted successfully.',
+        ]);
+    }
+
+    /**
+     * Export all users as JSON file.
+     *
+     * @return StreamedResponse
+     */
+    public function export(): StreamedResponse
+    {
+        $users = User::select([
+            'id',
+            'name',
+            'email',
+            'role',
+            'theme',
+            'profile_picture',
+            'zakat_rate',
+            'preferred_akad',
+            'calculation_method',
+            'created_at',
+            'updated_at',
+        ])->get();
+
+        $filename = 'users_export_' . now()->format('Y_m_d_His') . '.json';
+
+        return response()->streamDownload(function () use ($users) {
+            echo json_encode($users, JSON_PRETTY_PRINT);
+        }, $filename, [
+            'Content-Type' => 'application/json',
         ]);
     }
 }
