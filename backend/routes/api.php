@@ -67,5 +67,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes (Epic 8)
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/stats', [\App\Http\Controllers\Api\Admin\StatsController::class, 'index']);
+        Route::get('/logs', [\App\Http\Controllers\Api\Admin\ActivityLogController::class, 'index']);
     });
 });
