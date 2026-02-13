@@ -80,9 +80,9 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: AI Assistant & Intelligence (FR33-36)
-  epic-7: in-progress
+  epic-7: done
   7-1-ai-chat-proxy: done
-  7-2-ai-plan-generation-and-insights: backlog
+  7-2-ai-plan-generation-and-insights: done
   epic-7-retrospective: optional
 
   # Epic 8: Platform Administration (FR42-47)

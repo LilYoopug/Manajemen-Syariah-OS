@@ -61,6 +61,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // AI routes (Epic 7)
     Route::post('/ai/chat', [\App\Http\Controllers\Api\AiController::class, 'chat']);
+    Route::post('/ai/generate-plan', [\App\Http\Controllers\Api\AiController::class, 'generatePlan']);
+    Route::post('/ai/insight', [\App\Http\Controllers\Api\AiController::class, 'insight']);
 
     // Admin routes (Epic 8)
     Route::middleware('admin')->prefix('admin')->group(function () {
