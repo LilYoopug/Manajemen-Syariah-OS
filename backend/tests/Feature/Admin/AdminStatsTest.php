@@ -19,13 +19,15 @@ class AdminStatsTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        // Create some test data
-        User::factory()->count(5)->create();
-        Task::factory()->count(10)->create(['completed' => false]);
-        Task::factory()->count(3)->create(['completed' => true]);
+        // Create some test data - tasks should be associated with users
+        $users = User::factory()->count(5)->create();
+        foreach ($users as $user) {
+            Task::factory()->count(2)->for($user)->create(['completed' => false]);
+        }
+        // Create some completed tasks
+        Task::factory()->count(3)->for($users->first())->create(['completed' => true]);
 
         // Create login activity for some users
-        $users = User::all();
         foreach ($users->take(3) as $user) {
             ActivityLog::create([
                 'user_id' => $user->id,
@@ -50,7 +52,7 @@ class AdminStatsTest extends TestCase
             ->assertJson([
                 'data' => [
                     'totalUsers' => 6, // 5 + admin
-                    'totalTasks' => 13,
+                    'totalTasks' => 13, // 10 incomplete + 3 completed
                     'completedTasks' => 3,
                     'activeUsers' => 3, // 3 users with login activity
                 ],
@@ -110,7 +112,7 @@ class AdminStatsTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        // Create users with recent login (within 30 days)
+        // Create user with recent login (within 30 days)
         $recentUser = User::factory()->create();
         ActivityLog::create([
             'user_id' => $recentUser->id,
@@ -132,7 +134,7 @@ class AdminStatsTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'data' => [
-                    'activeUsers' => 1, // Only the recent user
+                    'activeUsers' => 1, // Only the recent user (not admin or old user)
                 ],
             ]);
     }

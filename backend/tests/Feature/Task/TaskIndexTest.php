@@ -255,9 +255,19 @@ class TaskIndexTest extends TestCase
         $user = User::factory()->create();
         Sanctum::actingAs($user);
 
-        $task1 = Task::factory()->for($user)->create(['text' => 'First Task']);
-        $task2 = Task::factory()->for($user)->create(['text' => 'Second Task']);
-        $task3 = Task::factory()->for($user)->create(['text' => 'Third Task']);
+        // Create tasks with explicit timestamps to ensure ordering
+        $task1 = Task::factory()->for($user)->create([
+            'text' => 'First Task',
+            'created_at' => now()->subSeconds(2),
+        ]);
+        $task2 = Task::factory()->for($user)->create([
+            'text' => 'Second Task',
+            'created_at' => now()->subSecond(),
+        ]);
+        $task3 = Task::factory()->for($user)->create([
+            'text' => 'Third Task',
+            'created_at' => now(),
+        ]);
 
         $response = $this->getJson('/api/tasks');
 

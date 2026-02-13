@@ -49,12 +49,15 @@ class ActivityLogTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
-        // Create logs at different times
+        // Create logs at different times with explicit timestamps
         $oldLog = ActivityLog::create([
             'user_id' => $admin->id,
             'action' => 'old.action',
             'created_at' => now()->subDays(2),
         ]);
+
+        // Ensure different timestamp by adding a second delay
+        sleep(1);
 
         $newLog = ActivityLog::create([
             'user_id' => $admin->id,
@@ -67,8 +70,9 @@ class ActivityLogTest extends TestCase
 
         $response->assertStatus(200);
 
-        // First log should be the newer one
-        $this->assertEquals('new.action', $response->json('data.0.action'));
+        // First log should be the newer one (by ID since timestamps might be same)
+        $firstLogAction = $response->json('data.0.action');
+        $this->assertEquals('new.action', $firstLogAction);
     }
 
     /**

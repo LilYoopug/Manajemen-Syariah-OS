@@ -12,6 +12,16 @@ class AiChatTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * Set up the test environment.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Set a fake API key for tests that need it
+        config(['services.gemini.api_key' => 'test-api-key']);
+    }
+
+    /**
      * Test authenticated user can chat with AI.
      */
     public function test_user_can_chat_with_ai(): void

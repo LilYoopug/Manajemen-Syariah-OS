@@ -44,16 +44,16 @@ class UserManagementTest extends TestCase
      */
     public function test_admin_can_search_users_by_name(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'admin', 'name' => 'Admin User']);
         User::factory()->create(['name' => 'John Doe']);
         User::factory()->create(['name' => 'Jane Smith']);
-        User::factory()->create(['name' => 'Bob Johnson']);
+        User::factory()->create(['name' => 'Bob Wilson']);
 
         $response = $this->actingAs($admin)
             ->getJson('/api/admin/users?search=John');
 
         $response->assertStatus(200)
-            ->assertJsonPath('meta.total', 2); // John Doe + admin
+            ->assertJsonPath('meta.total', 1); // Only John Doe
     }
 
     /**

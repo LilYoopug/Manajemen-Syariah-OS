@@ -4,9 +4,12 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class BackendInitializationTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Test that the users table has all required columns.
      */

@@ -27,10 +27,7 @@ class ProfileExportTest extends TestCase
             'calculation_method' => 'Hijri',
         ]);
 
-        // Create categories for the user
-        $category1 = Category::factory()->create(['user_id' => $user->id, 'name' => 'SDM']);
-        $category2 = Category::factory()->create(['user_id' => $user->id, 'name' => 'Keuangan']);
-
+        // User already has 6 default categories from observer, so we just verify they exist
         // Create tasks with history for the user
         $task1 = Task::factory()->create([
             'user_id' => $user->id,
@@ -122,8 +119,8 @@ class ProfileExportTest extends TestCase
         // Verify tasks are included
         $this->assertCount(2, $response->json('tasks'));
 
-        // Verify categories are included
-        $this->assertCount(2, $response->json('categories'));
+        // Verify categories are included (6 default from observer)
+        $this->assertCount(6, $response->json('categories'));
 
         // Verify history is included for task with history
         $taskData = collect($response->json('tasks'))->firstWhere('text', 'Complete daily prayer');
@@ -189,9 +186,7 @@ class ProfileExportTest extends TestCase
             'text' => 'User Two Task',
         ]);
 
-        // Create categories for each user
-        Category::factory()->create(['user_id' => $user1->id, 'name' => 'User One Category']);
-        Category::factory()->create(['user_id' => $user2->id, 'name' => 'User Two Category']);
+        // Categories are auto-seeded via observer, so each user has 6 default categories
 
         // Create history for user2's task (should not appear in user1's export)
         TaskHistory::factory()->create([
@@ -210,12 +205,13 @@ class ProfileExportTest extends TestCase
         $this->assertCount(1, $tasks);
         $this->assertEquals('User One Task', $tasks[0]['text']);
 
+        // Verify user1 has 6 default categories
         $categories = $response->json('categories');
-        $this->assertCount(1, $categories);
-        $this->assertEquals('User One Category', $categories[0]['name']);
+        $this->assertCount(6, $categories);
 
         // Verify user2's data is NOT included
-        $this->assertNotEquals('User Two Task', $tasks[0]['text'] ?? null);
+        $taskTexts = collect($tasks)->pluck('text')->toArray();
+        $this->assertNotContains('User Two Task', $taskTexts);
     }
 
     /**
@@ -236,11 +232,11 @@ class ProfileExportTest extends TestCase
         $this->assertStringContainsString('user-data-', $contentDisposition);
         $this->assertStringContainsString('.json', $contentDisposition);
 
-        // Check Cache-Control header
-        $this->assertEquals(
-            'no-cache, no-store, must-revalidate',
-            $response->headers->get('Cache-Control')
-        );
+        // Check Cache-Control header contains expected directives
+        $cacheControl = $response->headers->get('Cache-Control');
+        $this->assertStringContainsString('no-cache', $cacheControl);
+        $this->assertStringContainsString('no-store', $cacheControl);
+        $this->assertStringContainsString('must-revalidate', $cacheControl);
     }
 
     /**

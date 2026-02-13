@@ -11,6 +11,16 @@ class AiPlanAndInsightTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Set up the test environment.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Set a fake API key for tests that need it
+        config(['services.gemini.api_key' => 'test-api-key']);
+    }
+
     // ==========================================
     // Generate Plan Tests
     // ==========================================
