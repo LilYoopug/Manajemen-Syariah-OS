@@ -68,5 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/stats', [\App\Http\Controllers\Api\Admin\StatsController::class, 'index']);
         Route::get('/logs', [\App\Http\Controllers\Api\Admin\ActivityLogController::class, 'index']);
+        Route::get('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'index']);
+        Route::post('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'store']);
+        Route::put('/users/{user}', [\App\Http\Controllers\Api\Admin\UserController::class, 'update']);
+        Route::delete('/users/{user}', [\App\Http\Controllers\Api\Admin\UserController::class, 'destroy']);
     });
 });
