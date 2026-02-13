@@ -86,10 +86,10 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 8: Platform Administration (FR42-47)
-  epic-8: in-progress
+  epic-8: done
   8-1-admin-platform-statistics: done
   8-2-admin-activity-logs: done
   8-3-admin-user-management: done
   8-4-admin-user-export: done
-  8-5-admin-tool-management: backlog
+  8-5-admin-tool-management: done
   epic-8-retrospective: optional

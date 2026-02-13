@@ -73,5 +73,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'store']);
         Route::put('/users/{user}', [\App\Http\Controllers\Api\Admin\UserController::class, 'update']);
         Route::delete('/users/{user}', [\App\Http\Controllers\Api\Admin\UserController::class, 'destroy']);
+        Route::get('/tools', [\App\Http\Controllers\Api\Admin\ToolController::class, 'index']);
+        Route::post('/tools', [\App\Http\Controllers\Api\Admin\ToolController::class, 'store']);
+        Route::put('/tools/{tool}', [\App\Http\Controllers\Api\Admin\ToolController::class, 'update']);
+        Route::delete('/tools/{tool}', [\App\Http\Controllers\Api\Admin\ToolController::class, 'destroy']);
     });
 });
