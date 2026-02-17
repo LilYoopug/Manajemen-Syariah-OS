@@ -62,3 +62,4 @@ __pycache__/
 .claude/bmad-automation.tracking.json
 .claude/bmad-verifier-progress.json
 .claude/bmad-stop
+.the-dev-server-state.json
