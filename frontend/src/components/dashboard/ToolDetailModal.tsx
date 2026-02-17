@@ -1,7 +1,139 @@
-import React, { useState, useMemo } from 'react';
-import type { Tool } from '@/types/api';
+import React, { useState, useMemo, useEffect } from 'react';
+import type { Tool, Source } from '@/types/api';
 import { XMarkIcon, BookOpenIcon, LinkIcon, BriefcaseIcon } from '@/components/common/Icons';
 import ModalPortal from '@/components/common/ModalPortal';
+import { islamicApi } from '@/lib/api-islamic';
+
+// Source Preview Component for displaying Quran/Hadith/Website sources
+interface SourcePreviewProps {
+  source: Source;
+}
+
+const SourcePreview: React.FC<SourcePreviewProps> = ({ source }) => {
+  const [verseData, setVerseData] = useState<{
+    arabic?: string;
+    translation?: string;
+    surah_name?: string;
+  } | null>(null);
+  const [hadithData, setHadithData] = useState<{
+    arabic?: string;
+    translation?: string;
+    book_name?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (source.type === 'quran' && source.surah && source.verse) {
+      setLoading(true);
+      islamicApi
+        .getSurah(source.surah)
+        .then((surahData) => {
+          const ayat = surahData.ayat?.find((a) => a.nomorAyat === source.verse);
+          if (ayat) {
+            setVerseData({
+              arabic: ayat.teksArab,
+              translation: ayat.teksIndonesia,
+              surah_name: surahData.namaLatin,
+            });
+          }
+        })
+        .catch((err) => console.error('Failed to fetch verse:', err))
+        .finally(() => setLoading(false));
+    }
+    if (source.type === 'hadith' && source.book && source.number) {
+      setLoading(true);
+      islamicApi
+        .getHadith(source.book, source.number)
+        .then((data) => {
+          if (data) {
+            setHadithData({
+              arabic: data.arabic,
+              translation: data.translation,
+              book_name: data.book_name,
+            });
+          }
+        })
+        .catch((err) => console.error('Failed to fetch hadith:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [source]);
+
+  if (source.type === 'none') return null;
+
+  if (loading) {
+    return <div className="py-2 text-sm text-gray-500 italic">Memuat dalil...</div>;
+  }
+
+  if (source.type === 'quran') {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            Quran
+          </span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            QS. {verseData?.surah_name || `Surah ${source.surah}`}: {source.verse}
+          </span>
+        </div>
+        {verseData?.arabic && (
+          <p className="text-lg text-right font-serif text-gray-800 dark:text-gray-200 leading-relaxed">
+            {verseData.arabic}
+          </p>
+        )}
+        {verseData?.translation && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+            "{verseData.translation}"
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (source.type === 'hadith') {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+            Hadist
+          </span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {hadithData?.book_name || source.book} No. {source.number}
+          </span>
+        </div>
+        {hadithData?.arabic && (
+          <p className="text-lg text-right font-serif text-gray-800 dark:text-gray-200 leading-relaxed">
+            {hadithData.arabic}
+          </p>
+        )}
+        {hadithData?.translation && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+            "{hadithData.translation}"
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  if (source.type === 'website') {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+          Website
+        </span>
+        <a
+          href={source.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+        >
+          {source.title}
+        </a>
+      </div>
+    );
+  }
+
+  return null;
+};
 
 interface ToolDetailModalProps {
   tool: Tool;
@@ -181,6 +313,20 @@ const ToolDetailModal: React.FC<ToolDetailModalProps> = ({ tool, onClose }) => {
                     </footer>
                   )}
                 </blockquote>
+              </div>
+            )}
+
+            {/* New sources format with API fetching */}
+            {tool.sources && tool.sources.some((s) => s.type !== 'none') && (
+              <div className="p-5 bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500 rounded-r-xl">
+                <h4 className="font-bold text-primary-900 dark:text-primary-100 mb-3">
+                  Dalil Pendukung:
+                </h4>
+                <div className="space-y-3">
+                  {tool.sources.map((source, index) => (
+                    <SourcePreview key={index} source={source} />
+                  ))}
+                </div>
               </div>
             )}
 

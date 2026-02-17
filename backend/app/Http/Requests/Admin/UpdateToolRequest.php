@@ -36,6 +36,14 @@ class UpdateToolRequest extends FormRequest
             'relatedDirectoryIds' => ['nullable', 'array'],
             'relatedDalilText' => ['nullable', 'string'],
             'relatedDalilSource' => ['nullable', 'string', 'max:500'],
+            'sources' => ['nullable', 'array'],
+            'sources.*.type' => ['required', 'string', 'in:quran,hadith,website,none'],
+            'sources.*.surah' => ['nullable', 'integer', 'min:1', 'max:114'],
+            'sources.*.verse' => ['nullable', 'integer', 'min:1'],
+            'sources.*.book' => ['nullable', 'string'],
+            'sources.*.number' => ['nullable', 'integer', 'min:1'],
+            'sources.*.title' => ['nullable', 'string', 'max:255'],
+            'sources.*.url' => ['nullable', 'string', 'max:500'],
         ];
     }
 

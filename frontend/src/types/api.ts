@@ -176,6 +176,7 @@ export interface Tool {
   relatedDirectoryIds: number[] | null;
   relatedDalilText: string | null;
   relatedDalilSource: string | null;
+  sources?: Source[];
   createdAt: string;
   updatedAt: string;
 }
@@ -192,6 +193,7 @@ export interface CreateToolData {
   relatedDirectoryIds?: number[];
   relatedDalilText?: string;
   relatedDalilSource?: string;
+  sources?: Source[];
 }
 
 export interface UpdateToolData extends Partial<CreateToolData> {}

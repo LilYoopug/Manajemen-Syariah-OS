@@ -27,6 +27,7 @@ class Tool extends Model
         'related_directory_ids',
         'related_dalil_text',
         'related_dalil_source',
+        'sources',
     ];
 
     /**
@@ -41,6 +42,7 @@ class Tool extends Model
             'inputs' => 'array',
             'outputs' => 'array',
             'benefits' => 'array',
+            'sources' => 'array',
         ];
     }
 }

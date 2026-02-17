@@ -25,8 +25,11 @@ class ToolSeeder extends Seeder
                 'sharia_basis' => null,
                 'link' => 'https://example.com/planner',
                 'related_directory_ids' => json_encode(['m5']),
-                'related_dalil_text' => 'Dan orang-orang yang apabila membelanjakan (harta), mereka tidak berlebihan, dan tidak (pula) kikir, dan adalah (pembelanjaan itu) di tengah-tengah antara yang demikian.',
-                'related_dalil_source' => 'QS. Al-Furqan: 67',
+                'related_dalil_text' => null,
+                'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 25, 'verse' => 67]
+                ]),
             ],
             [
                 'name' => 'Life Planner Islami',
@@ -40,6 +43,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['p1']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 59, 'verse' => 18]
+                ]),
             ],
             [
                 'name' => 'Parenting Islami Assistant',
@@ -53,6 +59,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m4']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'bukhari', 'number' => 5952]
+                ]),
             ],
             [
                 'name' => 'Kalkulator Waris Islami',
@@ -66,6 +75,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m5', 'q3']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 4, 'verse' => 11]
+                ]),
             ],
             // Bisnis Islami
             [
@@ -80,6 +92,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'bukhari', 'number' => 2079]
+                ]),
             ],
             [
                 'name' => 'HR Payroll Syariah',
@@ -91,8 +106,11 @@ class ToolSeeder extends Seeder
                 'sharia_basis' => null,
                 'link' => 'https://example.com/payroll',
                 'related_directory_ids' => json_encode(['s1', 'q3']),
-                'related_dalil_text' => 'Berikan kepada seorang pekerja upahnya sebelum keringatnya kering.',
-                'related_dalil_source' => 'HR. Ibnu Majah',
+                'related_dalil_text' => null,
+                'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'ibnu-majah', 'number' => 2443]
+                ]),
             ],
             [
                 'name' => 'CRM Islami',
@@ -106,6 +124,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['s2']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'bukhari', 'number' => 36]
+                ]),
             ],
             [
                 'name' => 'Supply Chain Halal Tracker',
@@ -119,6 +140,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1', 'm5']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 168]
+                ]),
             ],
             [
                 'name' => 'Analisis Kelayakan Bisnis Syariah',
@@ -132,6 +156,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['p1', 'q2']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 195]
+                ]),
             ],
             // Lembaga/Komunitas
             [
@@ -146,6 +173,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1', 'p2']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 9, 'verse' => 18]
+                ]),
             ],
             [
                 'name' => 'Wakaf Manager',
@@ -159,6 +189,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m5']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'muslim', 'number' => 1631]
+                ]),
             ],
             [
                 'name' => 'Shariah Governance Toolkit',
@@ -172,6 +205,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1', 'q2', 'p4']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 4, 'verse' => 59]
+                ]),
             ],
             [
                 'name' => 'Manajemen Kurban Terpadu',
@@ -185,6 +221,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1', 'q3']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 22, 'verse' => 36]
+                ]),
             ],
             // Keuangan/Investasi
             [
@@ -199,6 +238,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m5']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 177]
+                ]),
             ],
             [
                 'name' => 'Shariah Stock Screener',
@@ -212,6 +254,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m5', 'p4']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 275]
+                ]),
             ],
             [
                 'name' => 'Shariah Contract Generator',
@@ -225,6 +270,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 282]
+                ]),
             ],
             [
                 'name' => 'Kalkulator Cicilan Syariah',
@@ -238,6 +286,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q3']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 278]
+                ]),
             ],
             // Edukasi
             [
@@ -252,6 +303,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m3']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 20, 'verse' => 114]
+                ]),
             ],
             [
                 'name' => 'Simulator Keputusan Syariah',
@@ -265,6 +319,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m3', 'q2']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'bukhari', 'number' => 6878]
+                ]),
             ],
             [
                 'name' => 'Assessment Kompetensi Islami',
@@ -278,6 +335,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['s2', 'p4']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 59, 'verse' => 18]
+                ]),
             ],
             [
                 'name' => 'Generator Dalil Kontekstual',
@@ -291,6 +351,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => null,
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 47, 'verse' => 24]
+                ]),
             ],
             // Sosial/Umat
             [
@@ -305,6 +368,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m5']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'muslim', 'number' => 1631]
+                ]),
             ],
             [
                 'name' => 'Platform Kolaborasi Halal',
@@ -318,6 +384,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['p2']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 5, 'verse' => 2]
+                ]),
             ],
             [
                 'name' => 'AI Muamalah Assistant',
@@ -331,6 +400,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['m3']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'hadith', 'book' => 'bukhari', 'number' => 67]
+                ]),
             ],
             [
                 'name' => 'Sistem Distribusi Infaq & Sedekah',
@@ -344,6 +416,9 @@ class ToolSeeder extends Seeder
                 'related_directory_ids' => json_encode(['q1', 'q3']),
                 'related_dalil_text' => null,
                 'related_dalil_source' => null,
+                'sources' => json_encode([
+                    ['type' => 'quran', 'surah' => 2, 'verse' => 261]
+                ]),
             ],
         ];
 

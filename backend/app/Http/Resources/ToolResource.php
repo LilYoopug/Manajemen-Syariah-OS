@@ -27,6 +27,7 @@ class ToolResource extends JsonResource
             'relatedDirectoryIds' => $this->related_directory_ids,
             'relatedDalilText' => $this->related_dalil_text,
             'relatedDalilSource' => $this->related_dalil_source,
+            'sources' => $this->sources,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];
