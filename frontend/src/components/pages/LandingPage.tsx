@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   DashboardIcon, ToolsIcon, BookOpenIcon, 
   WandSparklesIcon, ArrowTrendingUpIcon, 
@@ -13,35 +14,31 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-      setIsMobileMenuOpen(false);
+  const scrollToSection = (e: React.MouseEvent, sectionId: string) => {
+    e.preventDefault();
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navHeight = 64;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - navHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
+    // Delay closing menu to allow scroll animation to start
+    setTimeout(() => setIsMobileMenuOpen(false), 100);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       
       {/* Navbar */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-md py-3' 
-          : 'bg-transparent py-5'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <nav className="fixed top-0 w-full z-50 bg-white dark:bg-gray-800 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
             <div className="p-1.5 bg-primary-600 rounded-lg shadow-lg">
                 <DashboardIcon className="w-6 h-6 text-white" />
@@ -53,9 +50,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
-            <button onClick={() => scrollTo('features')} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 transition">Fitur</button>
-            <button onClick={() => scrollTo('ai-showcase')} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 transition">AI Muamalah</button>
-            <button onClick={() => scrollTo('segments')} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 transition">Solusi</button>
+            <button onClick={(e) => scrollToSection(e, 'features')} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 transition">Fitur</button>
+            <button onClick={(e) => scrollToSection(e, 'ai-showcase')} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 transition">AI Muamalah</button>
+            <button onClick={(e) => scrollToSection(e, 'segments')} className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 transition">Solusi</button>
             <button 
               onClick={onEnter}
               className="px-5 py-2 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 transition shadow-lg active:scale-95"
@@ -65,20 +62,39 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button className="md:hidden p-2 text-gray-600 dark:text-gray-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <button 
+            className="md:hidden p-2 text-gray-600 dark:text-gray-300" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
             {isMobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
           </button>
         </div>
 
         {/* Mobile Nav Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-gray-800 shadow-xl border-t dark:border-gray-700 p-4 space-y-4">
-            <button onClick={() => scrollTo('features')} className="block w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200">Fitur Utama</button>
-            <button onClick={() => scrollTo('ai-showcase')} className="block w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200">AI Planner</button>
-            <button onClick={() => scrollTo('segments')} className="block w-full text-left px-4 py-2 text-gray-700 dark:text-gray-200">Solusi Sektoral</button>
-            <button onClick={onEnter} className="block w-full px-4 py-3 bg-primary-600 text-white text-center font-bold rounded-xl">Masuk Platform</button>
-          </div>
-        )}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-gray-800 shadow-xl border-t dark:border-gray-700 overflow-hidden"
+            >
+              <motion.div 
+                initial={{ y: -10 }}
+                animate={{ y: 0 }}
+                exit={{ y: -10 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="p-4 space-y-1"
+              >
+                <button onClick={(e) => scrollToSection(e, 'features')} className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-lg transition-colors">Fitur Utama</button>
+                <button onClick={(e) => scrollToSection(e, 'ai-showcase')} className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-lg transition-colors">AI Planner</button>
+                <button onClick={(e) => scrollToSection(e, 'segments')} className="block w-full text-left px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-lg transition-colors">Solusi Sektoral</button>
+                <button onClick={() => { setIsMobileMenuOpen(false); onEnter(); }} className="block w-full px-4 py-3 mt-2 bg-primary-600 text-white text-center font-bold rounded-xl hover:bg-primary-700 transition-colors">Masuk Platform</button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero Section */}
@@ -95,8 +111,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             </span>
           </h1>
           <p className="max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-10">
-            Platform "Operating System" terpadu untuk manajemen berbasis Syariah. 
-            Dilengkapi wawasan dalil, 25+ tools praktis, dan monitoring berbasis AI.
+            Platform terpadu untuk manajemen berbasis Syariah. 
+            Dilengkapi wawasan dalil, task manager, AI assistant, dan katalog referensi tools.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button 
@@ -106,10 +122,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
               Mulai Gunakan SyariahOS
             </button>
             <button 
-              onClick={() => {
-                  const el = document.getElementById('features');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={(e) => scrollToSection(e, 'features')}
               className="px-8 py-4 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-bold rounded-2xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-lg"
             >
               Pelajari Fitur
@@ -124,7 +137,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <p className="text-3xl font-bold text-primary-600">25+</p>
-              <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Tools Praktis</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">Referensi Tools</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-primary-600">100%</p>
@@ -136,14 +149,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             </div>
             <div>
               <p className="text-3xl font-bold text-primary-600">Free</p>
-              <p className="text-sm text-gray-500 uppercase tracking-widest mt-1">Untuk Umat</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">Untuk Umat</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pillars Section */}
-      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-24 px-4 sm:px-6 lg:px-8 scroll-mt-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Tiga Pilar Utama SyariahOS</h2>
@@ -165,11 +178,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
               <div className="p-4 bg-emerald-100 dark:bg-emerald-900/50 rounded-2xl w-fit mb-6">
                 <ToolsIcon className="w-8 h-8 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Productivity Tools</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">Katalog lengkap alat bantu mulai dari Financial Planner, POS Syariah, hingga Kalkulator Waris & Zakat.</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Task Manager & Tools</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">Kelola tugas harian dengan tracking progress dan katalog 25+ referensi tools syariah untuk berbagai kebutuhan.</p>
               <ul className="space-y-3 text-sm text-gray-500 dark:text-gray-400">
-                <li className="flex items-center"><CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> 25+ Tools Siap Pakai</li>
-                <li className="flex items-center"><CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> Kategori Beragam & Terpadu</li>
+                <li className="flex items-center"><CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> Task Manager dengan Kategori Syariah</li>
+                <li className="flex items-center"><CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> 25+ Referensi Tools & Resources</li>
               </ul>
             </div>
             <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-md hover:shadow-xl transition-shadow border border-transparent hover:border-primary-100 dark:hover:border-primary-900">
@@ -188,7 +201,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       </section>
 
       {/* AI Planner Showcase */}
-      <section id="ai-showcase" className="py-24 bg-primary-600 text-white overflow-hidden">
+      <section id="ai-showcase" className="py-24 bg-primary-600 text-white overflow-hidden scroll-mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -244,7 +257,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       </section>
 
       {/* Segments Section */}
-      <section id="segments" className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-100 dark:bg-gray-800/50">
+      <section id="segments" className="py-24 px-4 sm:px-6 lg:px-8 bg-gray-100 dark:bg-gray-800/50 scroll-mt-16">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Didesain Untuk Siapa Saja</h2>
@@ -263,14 +276,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                 <BriefcaseIcon className="w-10 h-10 text-primary-600" />
               </div>
               <h4 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Bisnis & UMKM</h4>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">POS Syariah, HR Payroll, dan standarisasi akad bisnis profesional.</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">AI Strategic Planner, referensi tools bisnis syariah, dan dashboard monitoring KPI.</p>
             </div>
             <div className="text-center group">
               <div className="inline-flex p-6 bg-white dark:bg-gray-800 rounded-full shadow-md group-hover:scale-110 transition-transform mb-6">
                 <UsersIcon className="w-10 h-10 text-primary-600" />
               </div>
               <h4 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Lembaga & Komunitas</h4>
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Manajemen Masjid, pengelolaan wakaf, dan transparansi donasi.</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">Knowledge hub dalil, direktori maqasid syariah, dan referensi tools lembaga.</p>
             </div>
           </div>
         </div>
@@ -296,7 +309,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             <div className="absolute -bottom-10 -right-10 w-60 h-60 bg-white rounded-full"></div>
           </div>
         </div>
-        <div className="mt-16 text-center text-gray-500 text-sm">
+        <div className="mt-16 text-center text-gray-500 dark:text-gray-400 text-sm">
           &copy; {new Date().getFullYear()} Manajemen Syariah OS. Dikembangkan untuk kemaslahatan umat.
         </div>
       </footer>

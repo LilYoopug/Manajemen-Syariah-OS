@@ -15,14 +15,44 @@ export interface User {
   lastLogin: string;
 }
 
+// ============ Source Types ============
+
+export type SourceType = 'quran' | 'hadith' | 'website' | 'none';
+
+export interface QuranSource {
+  type: 'quran';
+  surah: number;
+  verse: number;
+}
+
+export interface HadithSource {
+  type: 'hadith';
+  book: string;
+  number: number;
+}
+
+export interface WebsiteSource {
+  type: 'website';
+  title: string;
+  url: string;
+}
+
+export interface NoneSource {
+  type: 'none';
+}
+
+export type Source = QuranSource | HadithSource | WebsiteSource | NoneSource;
+
 export interface DirectoryItem {
   id: string;
   title: string;
-  dalil?: string;
-  source?: string;
+  sources?: Source[];
   explanation?: string;
   children?: DirectoryItem[];
   parentPath?: string; // For easier searching
+  // Legacy fields for backward compatibility
+  dalil?: string;
+  source?: string;
 }
 
 export interface Tool {

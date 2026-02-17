@@ -1,42 +1,56 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
-import useLocalStorage from '@/hooks/useLocalStorage';
-import type { Task, ResetCycle, HistoryEntry } from '@/types';
-import { 
-    TrashIcon, CheckIcon, XMarkIcon, 
-    ClipboardListIcon, PlusCircleIcon, PencilIcon, 
-    ClockIcon
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { tasksApi, getErrorMessage } from '@/lib/api-services';
+import type { Task as ApiTask, CreateTaskData, ResetCycle } from '@/types/api';
+import {
+    TrashIcon, CheckIcon, XMarkIcon,
+    ClipboardListIcon, PlusCircleIcon,
+    ClockIcon, FunnelIcon
 } from '@/components/common/Icons';
 import { Skeleton } from '@/components/common/Skeleton';
+import ModalPortal from '@/components/common/ModalPortal';
+import ConfirmModal, { type ConfirmModalType } from '@/components/common/ConfirmModal';
 
-const INITIAL_TASKS: Task[] = [
-  { 
-    id: 't-1', 
-    text: 'Audit Ketepatan Waktu Pembayaran Gaji', 
-    completed: true, 
-    category: 'SDM', 
-    progress: 100, 
-    hasLimit: false,
-    resetCycle: 'monthly',
-    perCheckEnabled: false,
-    history: [{ id: 'h-1', timestamp: new Date().toISOString(), value: 1 }]
-  }
+// Default categories
+const DEFAULT_CATEGORIES = ['SDM', 'Bisnis', 'Keuangan', 'Sosial', 'Kepatuhan', 'Umum'];
+
+// Sort options
+type SortOption = 'default' | 'progress-asc' | 'progress-desc' | 'name-asc' | 'name-desc' | 'newest' | 'oldest';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'default', label: 'Default' },
+  { value: 'progress-asc', label: 'Progres ↑' },
+  { value: 'progress-desc', label: 'Progres ↓' },
+  { value: 'name-asc', label: 'Nama A-Z' },
+  { value: 'name-desc', label: 'Nama Z-A' },
+  { value: 'newest', label: 'Terbaru' },
+  { value: 'oldest', label: 'Terlama' },
 ];
 
+type Task = ApiTask;
+
 const TaskManager: React.FC = () => {
-  const [tasks, setTasks] = useLocalStorage<Task[]>('syariah_os_tasks', INITIAL_TASKS);
-  const [categories] = useLocalStorage<string[]>('syariah_os_categories', ['SDM', 'Bisnis', 'Keuangan', 'Sosial', 'Kepatuhan', 'Umum']);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [categories] = useState<string[]>(DEFAULT_CATEGORIES);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await tasksApi.getAll();
+      setTasks(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      setIsLoading(true);
-      // Simulate API - replace with real API later
-      setTimeout(() => setIsLoading(false), 600);
-    };
     fetchTasks();
-  }, []);
-  
+  }, [fetchTasks]);
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTaskData, setNewTaskData] = useState({
       text: '',
@@ -49,78 +63,134 @@ const TaskManager: React.FC = () => {
       perCheckEnabled: false,
       incrementValue: 1
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('default');
 
   const [isHistoryModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  
-  const handleAddTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTaskData.text.trim() === '') return;
-    
-    const progressValue = newTaskData.hasLimit && newTaskData.targetValue > 0 
-        ? Math.min(100, (newTaskData.currentValue / newTaskData.targetValue) * 100)
-        : 0;
 
-    const newTask: Task = {
-      id: Date.now().toString(),
-      text: newTaskData.text,
-      completed: newTaskData.hasLimit ? progressValue === 100 : false,
-      category: newTaskData.category,
-      progress: progressValue,
-      hasLimit: newTaskData.hasLimit,
-      currentValue: newTaskData.currentValue,
-      targetValue: newTaskData.targetValue,
-      unit: newTaskData.unit,
-      resetCycle: newTaskData.resetCycle,
-      perCheckEnabled: newTaskData.perCheckEnabled,
-      incrementValue: newTaskData.incrementValue,
-      subtasks: [],
-      history: newTaskData.currentValue > 0 ? [{ id: 'init-' + Date.now(), timestamp: new Date().toISOString(), value: newTaskData.currentValue, note: 'Nilai Awal' }] : [],
-      lastResetAt: new Date().toISOString()
-    };
+  // Confirm Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState<ConfirmModalType>('info');
+  const [modalAction, setModalAction] = useState<(() => void) | null>(null);
+  const [modalShowCancel, setModalShowCancel] = useState(false);
 
-    setTasks(prev => [newTask, ...prev]);
-    setIsAddModalOpen(false);
-    setNewTaskData({ text: '', category: 'Umum', hasLimit: false, currentValue: 0, targetValue: 0, unit: '', resetCycle: 'one-time', perCheckEnabled: false, incrementValue: 1 });
+  const showModal = (title: string, message: string, type: ConfirmModalType = 'info', onConfirm?: () => void, showCancel: boolean = false) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalType(type);
+    setModalAction(() => onConfirm || null);
+    setModalShowCancel(showCancel);
+    setModalOpen(true);
   };
 
-  const handleToggleTask = (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
+  const handleAddTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTaskData.text.trim() === '' || isSubmitting) return;
 
-    setTasks(currentTasks => currentTasks.map(t => {
-      if (t.id === id) {
-        if (t.hasLimit && t.perCheckEnabled && !t.completed) {
-            const inc = t.incrementValue || 1;
-            const newVal = Math.min((t.currentValue || 0) + inc, (t.targetValue || 1));
-            const progress = (newVal / (t.targetValue || 1)) * 100;
-            const historyEntry: HistoryEntry = { id: Date.now().toString(), timestamp: new Date().toISOString(), value: inc };
-            return { ...t, currentValue: newVal, progress, completed: newVal >= (t.targetValue || 1), history: [historyEntry, ...t.history] };
+    try {
+      setIsSubmitting(true);
+      const createData: CreateTaskData = {
+        text: newTaskData.text,
+        category: newTaskData.category,
+        resetCycle: newTaskData.resetCycle,
+        hasLimit: newTaskData.hasLimit,
+        targetValue: newTaskData.hasLimit ? newTaskData.targetValue : undefined,
+        unit: newTaskData.hasLimit ? newTaskData.unit : undefined,
+        incrementValue: newTaskData.hasLimit ? newTaskData.incrementValue : undefined,
+        perCheckEnabled: newTaskData.hasLimit ? newTaskData.perCheckEnabled : undefined,
+      };
+
+      const newTask = await tasksApi.create(createData);
+      setTasks(prev => [newTask, ...prev]);
+      setIsAddModalOpen(false);
+      setNewTaskData({ text: '', category: 'Umum', hasLimit: false, currentValue: 0, targetValue: 0, unit: '', resetCycle: 'one-time', perCheckEnabled: false, incrementValue: 1 });
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleTask = async (id: number) => {
+    try {
+      const updatedTask = await tasksApi.toggle(id);
+      setTasks(prev => prev.map(t => t.id === id ? updatedTask : t));
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  };
+
+  const handleDeleteTask = async (id: number) => {
+    showModal(
+      'Hapus Tugas',
+      'Apakah Anda yakin ingin menghapus tugas ini?',
+      'warning',
+      async () => {
+        try {
+          await tasksApi.delete(id);
+          setTasks(prev => prev.filter(t => t.id !== id));
+        } catch (err) {
+          setError(getErrorMessage(err));
         }
-
-        const newCompleted = !t.completed;
-        const updatedVal = newCompleted ? (t.targetValue || 1) : 0;
-        const entry: HistoryEntry = { id: Date.now().toString(), timestamp: new Date().toISOString(), value: newCompleted ? (t.hasLimit ? t.targetValue || 1 : 1) : -(t.currentValue || 0) };
-        return { ...t, completed: newCompleted, currentValue: updatedVal, progress: newCompleted ? 100 : 0, history: [entry, ...t.history] };
-      }
-      return t;
-    }));
+      },
+      true
+    );
   };
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
+    let result = tasks.filter(task => {
       const categoryMatch = !filterCategory || task.category === filterCategory;
       const searchMatch = !searchQuery || task.text.toLowerCase().includes(searchQuery.toLowerCase());
       return categoryMatch && searchMatch;
     });
-  }, [tasks, filterCategory, searchQuery]);
 
-  const openHistoryModal = (task: Task) => {
-    setSelectedTask(task);
-    setHistoryModalOpen(true);
+    // Apply sorting
+    result = [...result].sort((a, b) => {
+        switch (sortBy) {
+          case 'progress-asc': {
+            const progressA = a.hasLimit && a.targetValue ? (a.currentValue / a.targetValue) : (a.completed ? 1 : 0);
+            const progressB = b.hasLimit && b.targetValue ? (b.currentValue / b.targetValue) : (b.completed ? 1 : 0);
+            return progressA - progressB;
+          }
+          case 'progress-desc': {
+            const progressA = a.hasLimit && a.targetValue ? (a.currentValue / a.targetValue) : (a.completed ? 1 : 0);
+            const progressB = b.hasLimit && b.targetValue ? (b.currentValue / b.targetValue) : (b.completed ? 1 : 0);
+            return progressB - progressA;
+          }
+          case 'name-asc':
+            return a.text.localeCompare(b.text, 'id');
+          case 'name-desc':
+            return b.text.localeCompare(a.text, 'id');
+          case 'newest':
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          case 'oldest':
+            return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          default: {
+            const progressA = a.hasLimit && a.targetValue ? (a.currentValue / a.targetValue) : (a.completed ? 1 : 0);
+            const progressB = b.hasLimit && b.targetValue ? (b.currentValue / b.targetValue) : (b.completed ? 1 : 0);
+            return progressA - progressB;
+          }
+        }
+      });
+
+    return result;
+  }, [tasks, filterCategory, searchQuery, sortBy]);
+
+  const openHistoryModal = async (task: Task) => {
+    // Fetch task with history from API
+    try {
+      const taskWithHistory = await tasksApi.getById(task.id);
+      setSelectedTask(taskWithHistory);
+      setHistoryModalOpen(true);
+    } catch (err) {
+      showModal('Error', getErrorMessage(err), 'error');
+    }
   };
 
   const getCycleLabel = (cycle: ResetCycle) => {
@@ -137,10 +207,13 @@ const TaskManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Daftar Tugas Amanah</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 tracking-tight flex items-center">
+            <ClipboardListIcon className="w-8 h-8 mr-3 text-primary-600"/>
+            Daftar Tugas Amanah
+          </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">Pusat kendali operasional dan target berkelanjutan.</p>
         </div>
-        <button 
+        <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition shadow-lg active:scale-95 text-sm"
         >
@@ -148,7 +221,13 @@ const TaskManager: React.FC = () => {
             Tambah Tugas Amanah
         </button>
       </div>
-      
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800/30">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
             <input
@@ -158,15 +237,30 @@ const TaskManager: React.FC = () => {
                 placeholder="Cari tugas..."
                 className="w-full pl-12 pr-5 py-3 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
             />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
                 <ClipboardListIcon className="w-5 h-5" />
             </div>
         </div>
-        
+
         <div className="flex flex-wrap gap-2 items-center">
-            <button onClick={() => setFilterCategory(null)} className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${!filterCategory ? 'bg-primary-600 text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50'}`}>Semua</button>
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="appearance-none pl-10 pr-8 py-2.5 text-xs font-bold rounded-xl transition-all bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <FunnelIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none" />
+            </div>
+
+            {/* Category Filters */}
+            <button onClick={() => setFilterCategory(null)} className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${!filterCategory ? 'bg-primary-600 text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50'}`}>Semua</button>
             {categories.map(cat => (
-                <button key={cat} onClick={() => setFilterCategory(cat)} className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${filterCategory === cat ? 'bg-primary-600 text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50'}`}>{cat}</button>
+                <button key={cat} onClick={() => setFilterCategory(cat)} className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${filterCategory === cat ? 'bg-primary-600 text-white shadow-md' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50'}`}>{cat}</button>
             ))}
         </div>
       </div>
@@ -193,6 +287,12 @@ const TaskManager: React.FC = () => {
               </div>
             ))}
           </div>
+        ) : filteredTasks.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+            <ClipboardListIcon className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+            <p className="text-gray-500 dark:text-gray-400 font-medium">Belum ada tugas amanah.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Klik "Tambah Tugas Amanah" untuk memulai.</p>
+          </div>
         ) : (
           <div className="space-y-4">
             {filteredTasks.map(task => {
@@ -216,15 +316,15 @@ const TaskManager: React.FC = () => {
                                 </h4>
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">{task.category}</span>
+                                <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest">{task.category || 'Umum'}</span>
                                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getCycleLabel(task.resetCycle)}</span>
+                                <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{getCycleLabel(task.resetCycle)}</span>
                             </div>
                         </div>
                     </div>
                     <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openHistoryModal(task)} className="p-2 text-gray-400 hover:text-primary-600 transition-all" title="Riwayat Progres"><ClockIcon className="w-4 h-4"/></button>
-                        <button onClick={() => setTasks(prev => prev.filter(t => t.id !== task.id))} className="p-2 text-gray-400 hover:text-red-500 transition-all"><TrashIcon className="w-4 h-4" /></button>
+                        <button onClick={() => openHistoryModal(task)} className="p-2 text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all" title="Riwayat Progres"><ClockIcon className="w-4 h-4"/></button>
+                        <button onClick={() => handleDeleteTask(task.id)} className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all"><TrashIcon className="w-4 h-4" /></button>
                     </div>
                   </div>
 
@@ -249,25 +349,26 @@ const TaskManager: React.FC = () => {
       </div>
 
       {isAddModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <ModalPortal>
+          <div className="fixed inset-0 w-full h-full bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
               <div className="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl w-full max-w-lg border border-gray-100 dark:border-gray-700 p-8 animate-fadeIn relative max-h-[90vh] overflow-y-auto">
-                <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"><XMarkIcon className="w-6 h-6" /></button>
+                <button onClick={() => setIsAddModalOpen(false)} className="absolute top-6 right-6 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"><XMarkIcon className="w-6 h-6" /></button>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Tambah Amanah Baru</h3>
                 <form onSubmit={handleAddTask} className="space-y-5">
                     <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 ml-1">Deskripsi</label>
-                        <input required type="text" autoFocus value={newTaskData.text} onChange={(e) => setNewTaskData({...newTaskData, text: e.target.value})} className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none text-sm transition-all" />
+                        <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Deskripsi</label>
+                        <input required type="text" autoFocus value={newTaskData.text} onChange={(e) => setNewTaskData({...newTaskData, text: e.target.value})} className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-2xl focus:ring-2 focus:ring-primary-500 outline-none text-sm transition-all" disabled={isSubmitting} placeholder="Masukkan deskripsi tugas" />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2 ml-1">Kategori</label>
-                            <select value={newTaskData.category} onChange={e => setNewTaskData({...newTaskData, category: e.target.value})} className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-2xl text-sm cursor-pointer outline-none">
+                            <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2 ml-1">Kategori</label>
+                            <select value={newTaskData.category} onChange={e => setNewTaskData({...newTaskData, category: e.target.value})} className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-2xl text-sm cursor-pointer outline-none" disabled={isSubmitting}>
                                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2 ml-1">Siklus Reset</label>
-                            <select value={newTaskData.resetCycle} onChange={e => setNewTaskData({...newTaskData, resetCycle: e.target.value as ResetCycle})} className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-2xl text-sm cursor-pointer outline-none">
+                            <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-2 ml-1">Siklus Reset</label>
+                            <select value={newTaskData.resetCycle} onChange={e => setNewTaskData({...newTaskData, resetCycle: e.target.value as ResetCycle})} className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-2xl text-sm cursor-pointer outline-none" disabled={isSubmitting}>
                                 <option value="one-time">One-time</option>
                                 <option value="daily">Harian</option>
                                 <option value="weekly">Mingguan</option>
@@ -279,34 +380,42 @@ const TaskManager: React.FC = () => {
                     <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Gunakan Target Angka?</span>
-                            <button type="button" onClick={() => setNewTaskData({...newTaskData, hasLimit: !newTaskData.hasLimit})} className={`w-12 h-6 rounded-full transition-colors relative ${newTaskData.hasLimit ? 'bg-primary-600' : 'bg-gray-300'}`}>
+                            <button type="button" onClick={() => setNewTaskData({...newTaskData, hasLimit: !newTaskData.hasLimit})} className={`w-12 h-6 rounded-full transition-colors relative ${newTaskData.hasLimit ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
                                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${newTaskData.hasLimit ? 'left-7' : 'left-1'}`}></div>
                             </button>
                         </div>
                         {newTaskData.hasLimit && (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input type="number" placeholder="Target" onChange={e => setNewTaskData({...newTaskData, targetValue: Number(e.target.value)})} className="px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 rounded-xl" />
-                                    <input type="text" placeholder="Satuan (Rp, kg...)" onChange={e => setNewTaskData({...newTaskData, unit: e.target.value})} className="px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 rounded-xl" />
+                                    <input type="number" placeholder="Target" onChange={e => setNewTaskData({...newTaskData, targetValue: Number(e.target.value)})} className="px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 rounded-xl" disabled={isSubmitting} />
+                                    <input type="text" placeholder="Satuan (Rp, kg...)" onChange={e => setNewTaskData({...newTaskData, unit: e.target.value})} className="px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 rounded-xl" disabled={isSubmitting} />
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase">Input Per Klik?</span>
-                                    <button type="button" onClick={() => setNewTaskData({...newTaskData, perCheckEnabled: !newTaskData.perCheckEnabled})} className={`w-12 h-6 rounded-full transition-colors relative ${newTaskData.perCheckEnabled ? 'bg-primary-600' : 'bg-gray-300'}`}>
+                                    <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">Input Per Klik?</span>
+                                    <button type="button" onClick={() => setNewTaskData({...newTaskData, perCheckEnabled: !newTaskData.perCheckEnabled})} className={`w-12 h-6 rounded-full transition-colors relative ${newTaskData.perCheckEnabled ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
                                         <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${newTaskData.perCheckEnabled ? 'left-7' : 'left-1'}`}></div>
                                     </button>
                                 </div>
-                                {newTaskData.perCheckEnabled && <input type="number" placeholder="Jumlah per klik" onChange={e => setNewTaskData({...newTaskData, incrementValue: Number(e.target.value)})} className="w-full px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 rounded-xl" />}
+                                {newTaskData.perCheckEnabled && <input type="number" placeholder="Jumlah per klik" onChange={e => setNewTaskData({...newTaskData, incrementValue: Number(e.target.value)})} className="w-full px-4 py-2 border dark:border-gray-700 dark:bg-gray-800 rounded-xl" disabled={isSubmitting} />}
                             </div>
                         )}
                     </div>
-                    <button type="submit" className="w-full py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl hover:bg-primary-700 transition">Simpan Amanah</button>
+                    <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl hover:bg-primary-700 transition disabled:opacity-50">
+                      {isSubmitting ? (
+                        <span className="flex items-center justify-center">
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Menyimpan...
+                        </span>
+                      ) : 'Simpan Amanah'}
+                    </button>
                 </form>
               </div>
           </div>
+          </ModalPortal>
       )}
 
       {isHistoryModalOpen && selectedTask && (
-        <TaskHistoryModal 
+        <TaskHistoryModal
           task={selectedTask}
           onClose={() => setHistoryModalOpen(false)}
           onUpdateTask={(updated) => {
@@ -315,77 +424,105 @@ const TaskManager: React.FC = () => {
           }}
         />
       )}
+
+      <ConfirmModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={modalAction || undefined}
+        title={modalTitle}
+        message={modalMessage}
+        type={modalType}
+        showCancel={modalShowCancel}
+        confirmText={modalShowCancel ? 'Ya, Hapus' : 'OK'}
+        cancelText="Batal"
+      />
     </div>
   );
 };
 
 const TaskHistoryModal: React.FC<{ task: Task; onClose: () => void; onUpdateTask: (task: Task) => void }> = ({ task, onClose, onUpdateTask }) => {
-    const handleUpdateHistory = (id: string, newVal: string) => {
-        const value = Number(newVal);
-        const updatedHistory = task.history.map(h => h.id === id ? { ...h, value } : h);
-        const totalValue = updatedHistory.reduce((sum, h) => sum + h.value, 0);
-        onUpdateTask({ 
-            ...task, 
-            history: updatedHistory, 
-            currentValue: totalValue, 
-            progress: task.hasLimit ? (totalValue / (task.targetValue || 1)) * 100 : 0, 
-            completed: task.hasLimit ? totalValue >= (task.targetValue || 1) : task.completed 
-        });
+    // Confirm Modal state
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalMessage, setModalMessage] = useState('');
+    const [modalType, setModalType] = useState<ConfirmModalType>('info');
+    const [modalAction, setModalAction] = useState<(() => void) | null>(null);
+    const [modalShowCancel, setModalShowCancel] = useState(false);
+
+    const showModal = (title: string, message: string, type: ConfirmModalType = 'info', onConfirm?: () => void, showCancel: boolean = false) => {
+      setModalTitle(title);
+      setModalMessage(message);
+      setModalType(type);
+      setModalAction(() => onConfirm || null);
+      setModalShowCancel(showCancel);
+      setModalOpen(true);
     };
 
-    const handleDeleteHistory = (id: string) => {
-        const updatedHistory = task.history.filter(h => h.id !== id);
-        const totalValue = updatedHistory.reduce((sum, h) => sum + h.value, 0);
-        onUpdateTask({ 
-            ...task, 
-            history: updatedHistory, 
-            currentValue: totalValue, 
-            progress: task.hasLimit ? (totalValue / (task.targetValue || 1)) * 100 : 0, 
-            completed: task.hasLimit ? totalValue >= (task.targetValue || 1) : (updatedHistory.length === 0 ? false : task.completed)
-        });
+    const handleDeleteHistory = async (entryId: number) => {
+        showModal(
+          'Hapus Entri Riwayat',
+          'Apakah Anda yakin ingin menghapus entri riwayat ini untuk membatalkan progres?',
+          'warning',
+          async () => {
+            try {
+              await tasksApi.deleteHistory(task.id, entryId);
+              const updatedTask = await tasksApi.getById(task.id);
+              onUpdateTask(updatedTask);
+            } catch (err) {
+              showModal('Error', getErrorMessage(err), 'error');
+            }
+          },
+          true
+        );
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={onClose}>
+        <ModalPortal>
+        <div className="fixed inset-0 w-full h-full bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" onClick={onClose}>
             <div className="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl w-full max-w-lg p-8 border dark:border-gray-700 animate-fadeIn" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold dark:text-white truncate pr-6">Riwayat Aktivitas</h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl"><XMarkIcon className="w-5 h-5" /></button>
                 </div>
-                
+
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl border dark:border-gray-700">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Amanah</p>
+                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Amanah</p>
                     <p className="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight">{task.text}</p>
                 </div>
 
                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                    {task.history.length > 0 ? task.history.map(entry => (
+                    {task.history && task.history.length > 0 ? task.history.map(entry => (
                         <div key={entry.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border dark:border-gray-700">
                             <div>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center"><ClockIcon className="w-3 h-3 mr-1" /> {new Date(entry.timestamp).toLocaleString('id-ID')}</p>
+                                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest flex items-center"><ClockIcon className="w-3 h-3 mr-1" /> {new Date(entry.timestamp).toLocaleString('id-ID')}</p>
                                 <div className="flex items-center mt-1">
                                     <span className="text-sm font-bold text-gray-700 dark:text-gray-200">{entry.value > 0 ? '+' : ''}{entry.value}</span>
-                                    <span className="text-[10px] ml-1 text-gray-500">{task.unit}</span>
+                                    <span className="text-[10px] ml-1 text-gray-500 dark:text-gray-400">{task.unit}</span>
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-1">
-                                <button onClick={() => {
-                                    const n = prompt('Edit nilai progres:', entry.value.toString());
-                                    if (n !== null) handleUpdateHistory(entry.id, n);
-                                }} className="p-2 text-gray-400 hover:text-primary-600"><PencilIcon className="w-4 h-4"/></button>
-                                <button onClick={() => {
-                                    if(confirm('Hapus entri riwayat ini?')) handleDeleteHistory(entry.id);
-                                }} className="p-2 text-gray-400 hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
-                            </div>
+                            <button onClick={() => handleDeleteHistory(entry.id)} className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors" title="Batalkan/Hapus"><TrashIcon className="w-4 h-4"/></button>
                         </div>
-                    )) : <p className="text-center py-8 text-sm text-gray-500 italic">Belum ada riwayat aktivitas.</p>}
+                    )) : <p className="text-center py-8 text-sm text-gray-500 dark:text-gray-400 italic">Belum ada riwayat aktivitas.</p>}
                 </div>
 
                 <div className="mt-8 pt-6 border-t dark:border-gray-700 text-right">
                     <button onClick={onClose} className="px-8 py-3 bg-gray-100 dark:bg-gray-700 rounded-xl font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-200 transition-colors">Tutup</button>
                 </div>
             </div>
+
+            <ConfirmModal
+              isOpen={modalOpen}
+              onClose={() => setModalOpen(false)}
+              onConfirm={modalAction || undefined}
+              title={modalTitle}
+              message={modalMessage}
+              type={modalType}
+              showCancel={modalShowCancel}
+              confirmText={modalShowCancel ? 'Ya, Hapus' : 'OK'}
+              cancelText="Batal"
+            />
         </div>
+        </ModalPortal>
     );
 };
 

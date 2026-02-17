@@ -1,11 +1,9 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getKpiDataForPeriod, getGoalsDataForPeriod } from '@/constants';
-import KpiCard from '@/components/common/KpiCard';
-import GoalTracker from '@/components/dashboard/GoalTracker';
-import { DownloadIcon, CalendarDaysIcon } from '@/components/common/Icons';
-import type { Goal } from '@/types';
+import { dashboardApi, getErrorMessage } from '@/lib/api-services';
+import type { DashboardData, DashboardGoal } from '@/types/api';
+import { DownloadIcon, CalendarDaysIcon, ChartBarIcon, CheckCircleIcon, FolderIcon, SparklesIcon } from '@/components/common/Icons';
 import AIInsightCard from '@/components/ai/AIInsightCard';
 import { Skeleton, SkeletonCard } from '@/components/common/Skeleton';
 
@@ -14,25 +12,62 @@ declare const XLSX: any;
 
 type DateRange = '7' | '30' | 'all';
 
+const periodLabels: Record<string, string> = {
+  'one-time': 'Sekali',
+  'daily': 'Harian',
+  'weekly': 'Mingguan',
+  'monthly': 'Bulanan',
+  'yearly': 'Tahunan',
+};
+
 interface DashboardProps {
     dateRange: DateRange;
     setDateRange: (range: DateRange) => void;
 }
 
+interface KpiData {
+  title: string;
+  value: string | number;
+  change: string;
+  changeType: 'increase' | 'decrease' | 'neutral';
+  icon: React.ElementType;
+}
+
 const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
   const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    const fetchData = async () => {
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+
+  const fetchDashboardData = useCallback(async () => {
+    try {
       setIsLoading(true);
-      // Simulate API call - replace with real API later
-      setTimeout(() => setIsLoading(false), 500);
-    };
-    fetchData();
-  }, [dateRange]);
-  
-  const displayKpis = useMemo(() => getKpiDataForPeriod(dateRange === 'all' ? null : parseInt(dateRange)), [dateRange]);
-  const displayGoals = useMemo(() => getGoalsDataForPeriod(dateRange === 'all' ? null : parseInt(dateRange)), [dateRange]);
+      setError(null);
+      const data = await dashboardApi.get();
+      setDashboardData(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const displayKpis = useMemo((): KpiData[] => {
+    if (!dashboardData) return [];
+    return [
+      { title: 'Total Tugas', value: dashboardData.kpi.totalTasks, change: 'Tugas Aktif', changeType: 'neutral', icon: ChartBarIcon },
+      { title: 'Tugas Selesai', value: dashboardData.kpi.completedTasks, change: `${dashboardData.kpi.completionPercentage}%`, changeType: 'increase', icon: CheckCircleIcon },
+      { title: 'Kategori', value: Object.keys(dashboardData.kpi.tasksByCategory || {}).length, change: 'Kategori Aktif', changeType: 'neutral', icon: FolderIcon },
+      { title: 'Kepatuhan Syariah', value: `${dashboardData.kpi.kepatuhanSyariahScore}%`, change: 'Score', changeType: 'increase', icon: SparklesIcon },
+    ];
+  }, [dashboardData]);
+
+  const displayGoals = useMemo((): DashboardGoal[] => {
+    return dashboardData?.goals || [];
+  }, [dashboardData]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF.jsPDF();
@@ -48,7 +83,7 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
     doc.text("Goals & Targets", 20, yPos + 10);
     yPos += 20;
     displayGoals.forEach(goal => {
-        doc.text(`${goal.title}: ${goal.progress.toLocaleString()} / ${goal.target.toLocaleString()} ${goal.unit}`, 20, yPos);
+        doc.text(`${goal.title}: ${(goal.progress || 0).toLocaleString()} / ${(goal.target || 0).toLocaleString()} ${goal.unit || ''}`, 20, yPos);
         yPos += 10;
     });
 
@@ -64,9 +99,9 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
     XLSX.writeFile(workbook, "dashboard-report.xlsx");
   };
 
-  const chartData = displayGoals.map((g: Goal) => ({ 
-      name: g.title.length > 15 ? g.title.substring(0, 12) + '...' : g.title, 
-      progress: Math.round((g.progress / g.target) * 100) 
+  const chartData = displayGoals.map((g: DashboardGoal) => ({
+      name: (g.title?.length || 0) > 15 ? (g.title?.substring(0, 12) || '') + '...' : (g.title || ''),
+      progress: (g.target || 0) > 0 ? Math.round(((g.progress || 0) / (g.target || 1)) * 100) : 0
   }));
 
   return (
@@ -78,8 +113,8 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
         </div>
         <div className="flex items-center space-x-3">
             <div className="relative">
-                <select 
-                    value={dateRange} 
+                <select
+                    value={dateRange}
                     onChange={(e) => setDateRange(e.target.value as DateRange)}
                     className="appearance-none cursor-pointer pl-10 pr-10 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm transition-all"
                 >
@@ -99,9 +134,15 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
             </button>
         </div>
       </div>
-      
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800/30">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
+
       <AIInsightCard kpiData={displayKpis} goalData={displayGoals} />
-      
+
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
           <>
@@ -112,7 +153,18 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
           </>
         ) : (
           displayKpis.map((kpi, index) => (
-            <KpiCard key={index} {...kpi} />
+            <div key={index} className="bg-white dark:bg-gray-800 p-4 lg:p-4 xl:p-6 rounded-2xl shadow-md flex items-center space-x-3 transition hover:shadow-lg hover:scale-105 min-w-0 overflow-hidden border border-gray-100 dark:border-gray-700">
+              <div className={`p-2.5 rounded-full flex-shrink-0 ${kpi.changeType === 'increase' ? 'bg-green-100 dark:bg-green-900/50' : 'bg-blue-100 dark:bg-blue-900/50'}`}>
+                <kpi.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${kpi.changeType === 'increase' ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'}`} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] lg:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate" title={kpi.title}>{kpi.title}</p>
+                <div className="flex items-baseline space-x-1 mt-0.5 flex-wrap">
+                  <p className="text-lg lg:text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{kpi.value}</p>
+                  <span className="text-[10px] lg:text-xs font-bold flex-shrink-0 text-emerald-500">{kpi.change}</span>
+                </div>
+              </div>
+            </div>
           ))
         )}
       </div>
@@ -124,31 +176,37 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Grafik Target (%)</h3>
           </div>
           <div className="h-96 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.1)" vertical={false} />
-                <XAxis 
-                    dataKey="name" 
-                    tick={{ fill: 'currentColor', fontSize: 10 }} 
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                />
-                <YAxis unit="%" tick={{ fill: 'currentColor', fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(31, 41, 55, 0.95)',
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                    color: '#f3f4f6',
-                    borderRadius: '0.75rem',
-                    fontSize: '12px'
-                  }}
-                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
-                />
-                <Legend verticalAlign="top" height={36}/>
-                <Bar dataKey="progress" fill="#2563eb" name="Progres Capaian (%)" barSize={35} radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.1)" vertical={false} />
+                  <XAxis
+                      dataKey="name"
+                      tick={{ fill: 'currentColor', fontSize: 10 }}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                  />
+                  <YAxis unit="%" tick={{ fill: 'currentColor', fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                      color: '#f3f4f6',
+                      borderRadius: '0.75rem',
+                      fontSize: '12px'
+                    }}
+                    cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                  />
+                  <Legend verticalAlign="top" height={36}/>
+                  <Bar dataKey="progress" fill="#2563eb" name="Progres Capaian (%)" barSize={35} radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                <p>Belum ada data goals untuk ditampilkan</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -160,7 +218,7 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
           {isLoading ? (
             <div className="space-y-6">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-xl">
+                <div key={i} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
                   <div className="flex justify-between items-center mb-2">
                     <Skeleton className="h-5 w-32" />
                     <Skeleton className="h-4 w-16" />
@@ -170,11 +228,43 @@ const Dashboard: React.FC<DashboardProps> = ({ dateRange, setDateRange }) => {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : displayGoals.length > 0 ? (
             <div className="space-y-6">
-              {displayGoals.map(goal => (
-                <GoalTracker key={goal.id} {...goal} isLoading={isLoading} />
-              ))}
+              {displayGoals.map(goal => {
+                const progress = goal.progress || 0;
+                const target = goal.target || 1;
+                const percentage = goal.percentage ?? (target > 0 ? Math.min(Math.round((progress / target) * 100), 100) : 0);
+                return (
+                  <div key={goal.id} className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{goal.title || 'Untitled Goal'}</span>
+                        {goal.resetCycle && (
+                          <span className="text-[10px] px-2 py-0.5 bg-primary-100 dark:bg-primary-800/30 text-primary-700 dark:text-primary-300 rounded-full font-medium">
+                            {periodLabels[goal.resetCycle] || goal.resetCycle}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{percentage}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                      <div
+                        className="bg-primary-600 h-2 rounded-full transition-all"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="font-semibold text-gray-500 dark:text-gray-400">
+                        {progress.toLocaleString()} / {target.toLocaleString()} {goal.unit || ''}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400 dark:text-gray-500">
+              <p>Belum ada goals yang ditetapkan.</p>
             </div>
           )}
         </div>

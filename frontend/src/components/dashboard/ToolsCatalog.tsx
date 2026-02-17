@@ -1,28 +1,27 @@
 
-import React, { useState, useEffect } from 'react';
-import { TOOLS_DATA } from '@/constants';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { toolsApi, getErrorMessage } from '@/lib/api-services';
 import ToolDetailModal from '@/components/dashboard/ToolDetailModal';
-import type { Tool } from '@/types';
-import { ToolCategory } from '@/types';
-import { LinkIcon } from '@/components/common/Icons';
+import type { Tool } from '@/types/api';
+import { BriefcaseIcon, LinkIcon, ToolsIcon } from '@/components/common/Icons';
 import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 
 const ToolCard: React.FC<{ tool: Tool; onSelect: (tool: Tool) => void }> = ({ tool, onSelect }) => (
-  <div 
+  <div
     onClick={() => onSelect(tool)}
     className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-50 dark:border-gray-700 flex flex-col items-start cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
   >
     <div className="p-3.5 bg-gray-50 dark:bg-gray-900 border dark:border-gray-700 rounded-xl mb-5 group-hover:border-primary-200 dark:group-hover:border-primary-900 transition-colors shadow-sm">
-      <tool.icon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+      <BriefcaseIcon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
     </div>
     <p className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest mb-1">{tool.category}</p>
     <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 leading-tight">{tool.name}</h3>
     <p className="text-sm text-gray-500 dark:text-gray-400 flex-grow mb-4 leading-relaxed line-clamp-2">{tool.description}</p>
-    
+
     <div className="w-full flex items-center justify-between mt-auto pt-4 border-t border-gray-50 dark:border-gray-700">
       <span className="text-xs font-bold text-gray-400 dark:text-gray-500">Lihat Detail</span>
       {tool.link && (
-        <a 
+        <a
           href={tool.link}
           target="_blank"
           rel="noopener noreferrer"
@@ -38,34 +37,61 @@ const ToolCard: React.FC<{ tool: Tool; onSelect: (tool: Tool) => void }> = ({ to
 );
 
 const ToolsCatalog: React.FC = () => {
+  const [tools, setTools] = useState<Tool[]>([]);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
-  const [activeCategory, setActiveCategory] = useState<ToolCategory | 'All'>('All');
+  const [activeCategory, setActiveCategory] = useState<string>('All');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTools = async () => {
+  const fetchTools = useCallback(async () => {
+    try {
       setIsLoading(true);
-      // Simulate API - replace with real API later
-      setTimeout(() => setIsLoading(false), 500);
-    };
-    fetchTools();
+      setError(null);
+      const data = await toolsApi.getAll();
+      setTools(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const categories = ['All', ...Object.values(ToolCategory)];
-  const filteredTools = activeCategory === 'All' ? TOOLS_DATA : TOOLS_DATA.filter(tool => tool.category === activeCategory);
-  
+  useEffect(() => {
+    fetchTools();
+  }, [fetchTools]);
+
+  // Extract unique categories from tools data
+  const categories = useMemo(() => {
+    const uniqueCategories = new Set<string>();
+    tools.forEach(tool => {
+      if (tool.category) uniqueCategories.add(tool.category);
+    });
+    return ['All', ...Array.from(uniqueCategories).sort()];
+  }, [tools]);
+
+  const filteredTools = activeCategory === 'All' ? tools : tools.filter(tool => tool.category === activeCategory);
+
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Katalog 25+ Tools Praktis</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
+          <ToolsIcon className="w-8 h-8 mr-3 text-primary-600"/>
+          Katalog 25+ Tools Praktis
+        </h2>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Alat bantu praktis untuk individu, bisnis, lembaga, dan komunitas.</p>
       </div>
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800/30">
+          <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {categories.map(category => (
           <button
             key={category}
-            onClick={() => setActiveCategory(category as ToolCategory | 'All')}
+            onClick={() => setActiveCategory(category)}
             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
               activeCategory === category
                 ? 'bg-primary-600 text-white shadow-md'

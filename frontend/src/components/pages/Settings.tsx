@@ -1,34 +1,44 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import useLocalStorage from '@/hooks/useLocalStorage';
-import { 
-  UserIcon, BanknotesIcon, Cog6ToothIcon, 
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { profileApi, getErrorMessage } from '@/lib/api-services';
+import type { ProfileUpdateData } from '@/types/api';
+import type { View } from '@/types';
+import {
+  UserIcon, BanknotesIcon, Cog6ToothIcon,
   ArrowLeftOnRectangleIcon, DownloadIcon, TrashIcon,
   SunIcon, MoonIcon, CheckIcon, CameraIcon, XMarkIcon,
-  PlusCircleIcon, QuestionMarkCircleIcon, ChatBubbleLeftRightIcon,
-  BookOpenIcon, ChevronRightIcon, ChevronDownIcon
+  PlusCircleIcon, QuestionMarkCircleIcon,
+  ChevronRightIcon, ChevronDownIcon
 } from '@/components/common/Icons';
-import { Skeleton, SkeletonAvatar, SkeletonInput, SkeletonButton, SkeletonText } from '@/components/common/Skeleton';
-import type { UserProfile, View } from '@/types';
+import { Skeleton, SkeletonAvatar, SkeletonInput, SkeletonButton } from '@/components/common/Skeleton';
+import ModalPortal from '@/components/common/ModalPortal';
+import ConfirmModal, { type ConfirmModalType } from '@/components/common/ConfirmModal';
+
+interface UserProfile {
+  name: string;
+  zakatRate: number;
+  preferredAkad: string;
+  calculationMethod: 'Hijri' | 'Masehi';
+  profilePicture: string | null;
+}
 
 interface SettingsProps {
   toggleTheme: () => void;
   theme: 'light' | 'dark';
   setView: (view: View) => void;
+  onLogout: () => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
+const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView, onLogout }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'sharia' | 'app' | 'help'>('profile');
-  const [persistedProfile, setPersistedProfile] = useLocalStorage<UserProfile>('syariah_os_profile', {
+  const [profile, setProfile] = useState<UserProfile>({
     name: 'User Syariah',
     zakatRate: 2.5,
     preferredAkad: 'Murabahah',
     calculationMethod: 'Masehi',
-    profilePicture: 'https://picsum.photos/200'
+    profilePicture: null
   });
 
-  // Local state for editing fields before saving
-  const [profile, setProfile] = useState<UserProfile>(persistedProfile);
   const [isPfpModalOpen, setIsPfpModalOpen] = useState(false);
   const [newPfpUrl, setNewPfpUrl] = useState(profile.profilePicture || '');
   const [pfpSourceType, setPfpSourceType] = useState<'url' | 'upload'>('url');
@@ -37,39 +47,87 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isImageLoading, setIsImageLoading] = useState(true);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // Sync local state when persisted storage changes
-  useEffect(() => {
-    setProfile(persistedProfile);
-  }, [persistedProfile]);
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState<ConfirmModalType>('info');
+  const [modalAction, setModalAction] = useState<(() => void) | null>(null);
+  const [modalShowCancel, setModalShowCancel] = useState(false);
 
-  // Simulate API fetch with loading state
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      setIsImageLoading(true);
-      setTimeout(() => setIsLoading(false), 500);
-    };
-    fetchProfile();
-  }, []);
-
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaveStatus('saving');
-    setTimeout(() => {
-        setPersistedProfile(profile);
-        setSaveStatus('success');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-    }, 800);
+  const showModal = (title: string, message: string, type: ConfirmModalType = 'info', onConfirm?: () => void, showCancel: boolean = false) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalType(type);
+    setModalAction(() => onConfirm || null);
+    setModalShowCancel(showCancel);
+    setModalOpen(true);
   };
 
-  const handleUpdatePfp = (e: React.FormEvent) => {
-      e.preventDefault();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await profileApi.get();
+      setProfile({
+        name: data.name,
+        zakatRate: parseFloat(data.zakatRate) || 2.5,
+        preferredAkad: data.preferredAkad || 'Murabahah',
+        calculationMethod: (data.calculationMethod as 'Hijri' | 'Masehi') || 'Masehi',
+        profilePicture: data.profilePicture
+      });
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveStatus('saving');
+    try {
+      const updateData: ProfileUpdateData = {
+        name: profile.name,
+        zakatRate: profile.zakatRate,
+        preferredAkad: profile.preferredAkad,
+        calculationMethod: profile.calculationMethod,
+        profilePicture: profile.profilePicture || undefined,
+      };
+      await profileApi.update(updateData);
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setSaveStatus('idle');
+    }
+  };
+
+  const handleUpdatePfp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveStatus('saving');
+    try {
+      const updateData: ProfileUpdateData = {
+        profilePicture: newPfpUrl || undefined,
+      };
+      await profileApi.update(updateData);
       setProfile({ ...profile, profilePicture: newPfpUrl });
       setIsPfpModalOpen(false);
       setUploadError(null);
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (err) {
+      setUploadError(getErrorMessage(err));
+      setSaveStatus('idle');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,34 +149,45 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
     reader.readAsDataURL(file);
   };
 
-  const handleExportData = () => {
-    const data = {
-        profile,
-        tasks: localStorage.getItem('syariah_os_tasks'),
-        categories: localStorage.getItem('syariah_os_categories'),
-        theme: localStorage.getItem('theme')
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'syariahos_backup.json';
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportData = async () => {
+    try {
+      const blob = await profileApi.export();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'syariahos_backup.json';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      showModal('Gagal Mengekspor', getErrorMessage(err), 'error');
+    }
   };
 
-  const handleResetSystem = () => {
-    if (confirm("PERINGATAN: Ini akan menghapus semua data Anda secara permanen. Lanjutkan?")) {
-        localStorage.clear();
-        window.location.reload();
-    }
+  const handleResetSystem = async () => {
+    showModal(
+      'Peringatan Reset Data',
+      'Ini akan menghapus semua data Anda secara permanen. Lanjutkan?',
+      'warning',
+      async () => {
+        try {
+          await profileApi.reset();
+          onLogout();
+        } catch (err) {
+          showModal('Gagal Reset', getErrorMessage(err), 'error');
+        }
+      },
+      true
+    );
   };
 
   const handleLogout = () => {
-    if (confirm("Apakah Anda yakin ingin keluar?")) {
-      localStorage.removeItem('syariahos_role');
-      setView('landing');
-    }
+    showModal(
+      'Konfirmasi Keluar',
+      'Apakah Anda yakin ingin keluar?',
+      'confirm',
+      () => onLogout(),
+      true
+    );
   };
 
   const faqData = [
@@ -213,18 +282,27 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
                         <>
                             <div className="flex flex-col items-center space-y-4 mb-8">
                                 <div className="relative group">
-                                    <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-gray-700 bg-gray-100 dark:bg-gray-900 relative">
-                                        {isImageLoading && (
-                                            <SkeletonAvatar size="lg" className="absolute inset-0 z-10" />
+                                    <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-xl border-4 border-white dark:border-gray-700 bg-primary-100 dark:bg-primary-900/30 relative flex items-center justify-center">
+                                        {profile.profilePicture ? (
+                                            <>
+                                                {isImageLoading && (
+                                                    <SkeletonAvatar size="lg" className="absolute inset-0 z-10" />
+                                                )}
+                                                <img
+                                                    src={profile.profilePicture}
+                                                    alt="Profile"
+                                                    className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                                                    onLoad={() => setIsImageLoading(false)}
+                                                    onError={() => setIsImageLoading(false)}
+                                                />
+                                            </>
+                                        ) : (
+                                            <span className="text-4xl font-bold text-primary-600 dark:text-primary-400">
+                                                {profile.name ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U'}
+                                            </span>
                                         )}
-                                        <img 
-                                            src={profile.profilePicture || 'https://picsum.photos/200'} 
-                                            alt="Profile" 
-                                            className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-110 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-                                            onLoad={() => setIsImageLoading(false)}
-                                        />
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             setNewPfpUrl(profile.profilePicture || '');
                                             setIsPfpModalOpen(true);
@@ -235,18 +313,19 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
                                         <CameraIcon className="w-5 h-5" />
                                     </button>
                                 </div>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Profil Pengguna</p>
+                                <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Foto Profil Pengguna</p>
                             </div>
 
                             <form onSubmit={handleSaveProfile} className="space-y-6">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-2 ml-1">Nama Lengkap / Instansi</label>
-                                    <input 
+                                    <input
                                         required
-                                        type="text" 
-                                        value={profile.name} 
+                                        type="text"
+                                        value={profile.name}
                                         onChange={(e) => setProfile({...profile, name: e.target.value})}
-                                        className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-primary-500 text-gray-800 dark:text-gray-200 shadow-sm outline-none transition-all" 
+                                        className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-primary-500 text-gray-800 dark:text-gray-200 shadow-sm outline-none transition-all"
+                                        placeholder="Masukkan nama lengkap atau nama instansi"
                                     />
                                 </div>
                                 
@@ -283,7 +362,8 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
                                 step="0.1"
                                 value={profile.zakatRate} 
                                 onChange={(e) => setProfile({...profile, zakatRate: parseFloat(e.target.value)})}
-                                className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-primary-500 text-gray-800 dark:text-gray-200 shadow-sm outline-none transition-all" 
+                                className="w-full px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-primary-500 text-gray-800 dark:text-gray-200 shadow-sm outline-none transition-all"
+                                placeholder="Contoh: 2.5"
                             />
                         </div>
                         <div>
@@ -419,7 +499,7 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
                                     className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                 >
                                     <span className="text-sm font-bold text-gray-800 dark:text-gray-200">{item.q}</span>
-                                    {openFaq === index ? <ChevronDownIcon className="w-5 h-5 text-primary-500" /> : <ChevronRightIcon className="w-5 h-5 text-gray-400" />}
+                                    {openFaq === index ? <ChevronDownIcon className="w-5 h-5 text-primary-500" /> : <ChevronRightIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
                                 </button>
                                 {openFaq === index && (
                                     <div className="px-5 pb-5 animate-slideDown">
@@ -438,7 +518,8 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
 
       {/* Profile Picture Edit Modal */}
       {isPfpModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <ModalPortal>
+        <div className="fixed inset-0 w-full h-full bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-fadeIn border border-gray-100 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold dark:text-white tracking-tight">Ganti Foto Profil</h3>
@@ -518,27 +599,45 @@ const Settings: React.FC<SettingsProps> = ({ toggleTheme, theme, setView }) => {
                     )}
 
                     <div className="pt-2 flex gap-3">
-                        <button 
-                            type="button" 
+                        <button
+                            type="button"
                             onClick={() => {
                                 setIsPfpModalOpen(false);
                                 setUploadError(null);
                             }}
-                            className="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 transition active:scale-[0.98]"
+                            disabled={saveStatus === 'saving'}
+                            className="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-bold rounded-2xl hover:bg-gray-200 transition active:scale-[0.98] disabled:opacity-50"
                         >
                             Batal
                         </button>
-                        <button 
-                            type="submit" 
-                            className="flex-1 py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl hover:bg-primary-700 transition active:scale-[0.98]"
+                        <button
+                            type="submit"
+                            disabled={saveStatus === 'saving'}
+                            className="flex-1 py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl hover:bg-primary-700 transition active:scale-[0.98] disabled:bg-primary-400 flex items-center justify-center"
                         >
-                            Pasang Foto
+                            {saveStatus === 'saving' ? (
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                'Pasang Foto'
+                            )}
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+        </ModalPortal>
       )}
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={modalAction || undefined}
+        title={modalTitle}
+        message={modalMessage}
+        type={modalType}
+        showCancel={modalShowCancel}
+      />
     </div>
   );
 };

@@ -1,6 +1,10 @@
+/**
+ * Auth Component - Connected to Backend API
+ */
 
 import React, { useState } from 'react';
-import { DashboardIcon, EyeIcon, EyeSlashIcon, UserIcon, ArrowTrendingUpIcon, SparklesIcon } from '@/components/common/Icons';
+import { DashboardIcon, EyeIcon, EyeSlashIcon, UserIcon, SparklesIcon } from '@/components/common/Icons';
+import { useAuth } from '@/contexts/AuthContext';
 import type { View } from '@/types';
 
 interface AuthProps {
@@ -9,6 +13,7 @@ interface AuthProps {
 }
 
 const Auth: React.FC<AuthProps> = ({ type, setView }) => {
+  const { login, register, error, clearError, isLoading: authLoading, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -17,57 +22,70 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
     password: '',
     confirmPassword: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const isLogin = type === 'login';
+  const isLoading = authLoading;
 
-  const handleDevLogin = (role: 'admin' | 'user') => {
-    setIsLoading(true);
-    setTimeout(() => {
-      localStorage.setItem('syariahos_role', role);
-      setIsLoading(false);
-      setView(role === 'admin' ? 'admin_dashboard' : 'dashboard');
-    }, 500);
+  // Dev login for testing (uses actual API with dev credentials)
+  const handleDevLogin = async (role: 'admin' | 'user') => {
+    const devCredentials = {
+      admin: { email: 'admin@syariahos.com', password: 'Admin123!' },
+      user: { email: 'budi.santoso@email.com', password: 'User123!' }
+    };
+
+    try {
+      await login(devCredentials[role]);
+    } catch {
+      setLocalError('Dev login failed. Make sure the backend is running and seeded with test users.');
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setLocalError(null);
+    clearError();
 
-    // Simulasi proses auth
-    setTimeout(() => {
-        if (!isLogin && formData.password !== formData.confirmPassword) {
-            alert("Password dan Verifikasi Password tidak cocok!");
-            setIsLoading(false);
-            return;
-        }
-        
-        // Admin Credential Check
-        if (isLogin && formData.email === 'admin@syariahos.com' && formData.password === 'admin123') {
-            localStorage.setItem('syariahos_role', 'admin');
-            setIsLoading(false);
-            setView('admin_dashboard');
-            return;
-        }
+    // Validate password match for registration
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setLocalError('Password dan Verifikasi Password tidak cocok!');
+      return;
+    }
 
-        localStorage.setItem('syariahos_role', 'user');
-        setIsLoading(false);
-        setView('dashboard');
-    }, 1500);
+    try {
+      if (isLogin) {
+        await login({
+          email: formData.email,
+          password: formData.password,
+        });
+      } else {
+        await register({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          password_confirmation: formData.confirmPassword,
+        });
+      }
+      // Navigation is handled by App.tsx based on user role
+    } catch {
+      // Error is handled by auth context
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const displayError = localError || error;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 py-12 relative overflow-hidden">
-      
+
       {/* Background Decorations Layer */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-500/10 dark:bg-primary-600/10 rounded-full blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary-500/10 dark:bg-secondary-600/10 rounded-full blur-[120px] animate-pulse [animation-delay:2s]"></div>
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" 
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
              style={{ backgroundImage: 'radial-gradient(circle, #3b82f6 1.5px, transparent 1.5px)', backgroundSize: '48px 48px' }}>
         </div>
       </div>
@@ -81,26 +99,39 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
             {isLogin ? 'Masuk ke SyariahOS' : 'Daftar Akun Baru'}
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 font-medium">
-            {isLogin 
-              ? 'Selamat datang kembali! Kelola amanah dengan profesional.' 
+            {isLogin
+              ? 'Selamat datang kembali! Kelola amanah dengan profesional.'
               : 'Mulai perjalanan manajemen berbasis Syariah yang terpadu.'}
           </p>
         </div>
+
+        {/* Error Display */}
+        {displayError && (
+          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800/30">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400 text-center">
+              {displayError}
+            </p>
+          </div>
+        )}
 
         {/* Dev Buttons Area */}
         <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/30">
           <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3 text-center">Development Shortcuts</p>
           <div className="grid grid-cols-2 gap-3">
-            <button 
+            <button
+              type="button"
               onClick={() => handleDevLogin('admin')}
-              className="px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition shadow-sm flex items-center justify-center"
+              disabled={isLoading}
+              className="px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition shadow-sm flex items-center justify-center disabled:opacity-50"
             >
               <SparklesIcon className="w-3 h-3 mr-1.5" />
               Dev Admin
             </button>
-            <button 
+            <button
+              type="button"
               onClick={() => handleDevLogin('user')}
-              className="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm flex items-center justify-center"
+              disabled={isLoading}
+              className="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm flex items-center justify-center disabled:opacity-50"
             >
               <UserIcon className="w-3 h-3 mr-1.5" />
               Dev User
@@ -109,8 +140,8 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
         </div>
 
         <div className="relative">
-          <form 
-            onSubmit={handleSubmit} 
+          <form
+            onSubmit={handleSubmit}
             className={`mt-8 space-y-5 transition-opacity duration-200 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
           >
             {!isLogin && (
@@ -119,7 +150,7 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
                 <input
                   name="name"
                   type="text"
-                  required
+                  required={!isLogin}
                   value={formData.name}
                   onChange={handleChange}
                   className="appearance-none block w-full px-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all shadow-sm placeholder:text-gray-400"
@@ -170,7 +201,7 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
                   <input
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    required
+                    required={!isLogin}
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className="appearance-none block w-full px-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all pr-12 shadow-sm placeholder:text-gray-400"
@@ -201,7 +232,7 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
               </button>
             </div>
           </form>
-          
+
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl z-20">
               <div className="text-center">
@@ -218,7 +249,8 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
             <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {isLogin ? 'Baru di SyariahOS?' : 'Sudah memiliki akun?'}
               <button
-                onClick={() => setView(isLogin ? 'register' : 'login')}
+                type="button"
+                onClick={() => { setView(isLogin ? 'register' : 'login'); clearError(); setLocalError(null); }}
                 className="ml-2 font-bold text-primary-600 hover:text-primary-500 focus:outline-none transition-all hover:underline underline-offset-4 decoration-2"
               >
                 {isLogin ? 'Daftar Gratis' : 'Masuk di Sini'}

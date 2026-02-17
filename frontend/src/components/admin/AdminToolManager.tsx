@@ -1,119 +1,232 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import useLocalStorage from '@/hooks/useLocalStorage';
-import { TOOLS_DATA } from '@/constants';
-// FIX: Import ChevronDownIcon to resolve 'Cannot find name' errors on lines 142 and 159.
-import { 
-    BriefcaseIcon, TrashIcon, Cog6ToothIcon, PlusCircleIcon, 
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { adminApi, getErrorMessage } from '@/lib/api-services';
+import type { Tool, CreateToolData, UpdateToolData } from '@/types/api';
+import {
+    BriefcaseIcon, TrashIcon, Cog6ToothIcon, PlusCircleIcon,
     XMarkIcon, LinkIcon, MagnifyingGlassIcon, FunnelIcon, CalendarIcon,
-    ChevronDownIcon 
+    ChevronDownIcon
 } from '@/components/common/Icons';
 import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
-import type { Tool } from '@/types';
-import { ToolCategory } from '@/types';
+import ModalPortal from '@/components/common/ModalPortal';
+import ConfirmModal, { type ConfirmModalType } from '@/components/common/ConfirmModal';
+
+const DEFAULT_CATEGORIES = ['Individu/Keluarga', 'Bisnis Islami', 'Lembaga/Komunitas', 'Keuangan/Investasi', 'Edukasi', 'Sosial/Umat'];
+
+// Form state type - uses strings for inputs/outputs/benefits (comma-separated)
+interface ToolFormState {
+  id?: number;
+  name: string;
+  category: string;
+  description: string;
+  link: string;
+  inputs: string;  // comma-separated
+  outputs: string; // comma-separated
+  benefits: string; // comma-separated
+  shariaBasis: string;
+  relatedDirectoryIds: number[];
+  relatedDalilText: string;
+  relatedDalilSource: string;
+}
+
+// Helper to convert array to comma-separated string
+const arrayToString = (arr: string[] | undefined): string => {
+  return arr ? arr.join(', ') : '';
+};
+
+// Helper to convert comma-separated string to array
+const stringToArray = (str: string): string[] => {
+  return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+};
 
 const AdminToolManager: React.FC = () => {
-  // Initialize with base data and ensure createdAt exists for existing mock data
-  const [tools, setTools] = useLocalStorage<Tool[]>('syariahos_admin_tools', TOOLS_DATA.map(t => ({
-      ...t, 
-      createdAt: t.createdAt || Date.now() - (Math.random() * 1000 * 60 * 60 * 24 * 30) // Random dates within last 30 days for mock
-  })));
-  
+  const [tools, setTools] = useState<Tool[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTool, setEditingTool] = useState<Partial<Tool> | null>(null);
+  const [editingTool, setEditingTool] = useState<ToolFormState | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<ToolCategory | 'Semua'>('Semua');
+  const [categoryFilter, setCategoryFilter] = useState<string>('Semua');
   const [sortByDate, setSortByDate] = useState<'newest' | 'oldest'>('newest');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTools = async () => {
+  // Confirm Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalType, setModalType] = useState<ConfirmModalType>('info');
+  const [modalAction, setModalAction] = useState<(() => void) | null>(null);
+  const [modalShowCancel, setModalShowCancel] = useState(false);
+
+  const showModal = (title: string, message: string, type: ConfirmModalType = 'info', onConfirm?: () => void, showCancel: boolean = false) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalType(type);
+    setModalAction(() => onConfirm || null);
+    setModalShowCancel(showCancel);
+    setModalOpen(true);
+  };
+
+  // Get unique categories from tools data, fallback to defaults
+  const availableCategories = useMemo(() => {
+    if (tools.length === 0) return DEFAULT_CATEGORIES;
+    const categories = new Set<string>();
+    tools.forEach(t => {
+      if (t.category) categories.add(t.category);
+    });
+    // Merge with defaults to ensure all categories are available
+    DEFAULT_CATEGORIES.forEach(cat => categories.add(cat));
+    return Array.from(categories).sort();
+  }, [tools]);
+
+  const fetchTools = useCallback(async () => {
+    try {
       setIsLoading(true);
-      setTimeout(() => setIsLoading(false), 600);
-    };
-    fetchTools();
+      setError(null);
+      const data = await adminApi.getTools();
+      setTools(data);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchTools();
+  }, [fetchTools]);
+
   const filteredTools = useMemo(() => {
-    const query = searchQuery.toLowerCase();
-    
-    let result = tools.filter(t => 
-      (t.name.toLowerCase().includes(query) || 
-      t.category.toLowerCase().includes(query) || 
-      t.description.toLowerCase().includes(query)) &&
-      (categoryFilter === 'Semua' || t.category === categoryFilter)
-    );
+    const query = searchQuery.toLowerCase().trim();
+
+    let result = tools.filter(t => {
+      const name = (t.name || '').toLowerCase();
+      const category = (t.category || '').toLowerCase();
+      const description = (t.description || '').toLowerCase();
+
+      const matchesSearch = !query ||
+        name.includes(query) ||
+        category.includes(query) ||
+        description.includes(query);
+
+      // Category filter - exact match (case-sensitive since API returns exact values)
+      const matchesCategory = categoryFilter === 'Semua' || t.category === categoryFilter;
+
+      return matchesSearch && matchesCategory;
+    });
 
     // Sort by date
     result.sort((a, b) => {
-        const timeA = a.createdAt || 0;
-        const timeB = b.createdAt || 0;
-        return sortByDate === 'newest' ? timeB - timeA : timeA - timeB;
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return sortByDate === 'newest' ? timeB - timeA : timeA - timeB;
     });
 
     return result;
   }, [tools, searchQuery, categoryFilter, sortByDate]);
 
-  const deleteTool = (e: React.MouseEvent, id: string) => {
+  const deleteTool = async (e: React.MouseEvent, id: number) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const toolToDelete = tools.find(t => t.id === id);
-    if (confirm(`Yakin ingin menghapus tool "${toolToDelete?.name}" dari katalog publik?`)) {
-        setTools(tools.filter(t => t.id !== id));
-    }
+    showModal(
+      'Hapus Tool',
+      `Yakin ingin menghapus tool "${toolToDelete?.name}" dari katalog publik?`,
+      'warning',
+      async () => {
+        try {
+          await adminApi.deleteTool(id);
+          setTools(tools.filter(t => t.id !== id));
+        } catch (err) {
+          showModal('Error', getErrorMessage(err), 'error');
+        }
+      },
+      true
+    );
   };
 
   const openAddModal = () => {
     setEditingTool({
-      id: Date.now().toString(),
       name: '',
-      category: ToolCategory.Individu,
+      category: DEFAULT_CATEGORIES[0],
       description: '',
       link: '',
-      icon: BriefcaseIcon,
       inputs: '',
       outputs: '',
       benefits: '',
       shariaBasis: '',
       relatedDirectoryIds: [],
-      relatedDalil: { text: '', source: '' },
-      createdAt: Date.now()
+      relatedDalilText: '',
+      relatedDalilSource: '',
     });
     setIsModalOpen(true);
   };
 
   const openEditModal = (tool: Tool) => {
-    setEditingTool(tool);
+    setEditingTool({
+      id: tool.id,
+      name: tool.name,
+      category: tool.category,
+      description: tool.description,
+      link: tool.link || '',
+      inputs: arrayToString(tool.inputs),
+      outputs: arrayToString(tool.outputs),
+      benefits: arrayToString(tool.benefits),
+      shariaBasis: tool.shariaBasis || '',
+      relatedDirectoryIds: tool.relatedDirectoryIds || [],
+      relatedDalilText: tool.relatedDalilText || '',
+      relatedDalilSource: tool.relatedDalilSource || '',
+    });
     setIsModalOpen(true);
   };
 
   const handleSaveTool = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingTool) {
-      setIsSubmitting(true);
-      await new Promise(resolve => setTimeout(resolve, 800));
-      const toolToSave = { ...editingTool, createdAt: editingTool.createdAt || Date.now() } as Tool;
-      const exists = tools.some(t => t.id === toolToSave.id);
-      if (exists) {
-        setTools(tools.map(t => t.id === toolToSave.id ? toolToSave : t));
+    if (!editingTool) return;
+
+    setIsSubmitting(true);
+    try {
+      // Convert comma-separated strings to arrays for API
+      const toolData: CreateToolData | UpdateToolData = {
+        name: editingTool.name,
+        category: editingTool.category,
+        description: editingTool.description,
+        link: editingTool.link || undefined,
+        inputs: stringToArray(editingTool.inputs),
+        outputs: stringToArray(editingTool.outputs),
+        benefits: stringToArray(editingTool.benefits),
+        shariaBasis: editingTool.shariaBasis || undefined,
+        relatedDirectoryIds: editingTool.relatedDirectoryIds.length > 0 ? editingTool.relatedDirectoryIds : undefined,
+        relatedDalilText: editingTool.relatedDalilText || undefined,
+        relatedDalilSource: editingTool.relatedDalilSource || undefined,
+      };
+
+      if (editingTool.id) {
+        // Update existing tool
+        const updated = await adminApi.updateTool(editingTool.id, toolData as UpdateToolData);
+        setTools(tools.map(t => t.id === updated.id ? updated : t));
       } else {
-        setTools([toolToSave, ...tools]);
+        // Create new tool
+        const created = await adminApi.createTool(toolData as CreateToolData);
+        setTools([created, ...tools]);
       }
-      setIsSubmitting(false);
       setIsModalOpen(false);
       setEditingTool(null);
+    } catch (err) {
+      showModal('Error', getErrorMessage(err), 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const formatDate = (timestamp?: number) => {
-      if (!timestamp) return '-';
-      return new Date(timestamp).toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-      });
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -149,13 +262,13 @@ const AdminToolManager: React.FC = () => {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FunnelIcon className="h-4 w-4 text-gray-400" />
                   </div>
-                  <select 
+                  <select
                     value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value as any)}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
                     className="w-full pl-9 pr-8 py-3 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm shadow-sm appearance-none cursor-pointer font-medium text-gray-600 dark:text-gray-300"
                   >
                       <option value="Semua">Semua Kategori</option>
-                      {Object.values(ToolCategory).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      {availableCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                   </select>
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                       <ChevronDownIcon className="h-4 w-4 text-gray-400" />
@@ -239,7 +352,7 @@ const AdminToolManager: React.FC = () => {
                             <span className="truncate">{tool.link}</span>
                         </>
                     ) : (
-                        <span className="text-gray-300 italic">No direct link</span>
+                        <span className="text-gray-300 dark:text-gray-600 italic">No direct link</span>
                     )}
                 </div>
               </div>
@@ -253,7 +366,8 @@ const AdminToolManager: React.FC = () => {
       )}
 
       {isModalOpen && editingTool && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <ModalPortal>
+        <div className="fixed inset-0 w-full h-full bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl p-8 shadow-2xl animate-fadeIn border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-8">
                     <h3 className="text-xl font-bold dark:text-white">{editingTool.name ? 'Edit Konfigurasi Tool' : 'Registrasi Tool Baru'}</h3>
@@ -262,8 +376,8 @@ const AdminToolManager: React.FC = () => {
                 <form onSubmit={handleSaveTool} className="space-y-6">
                     <div>
                         <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Sektor Penggunaan</label>
-                        <select value={editingTool.category} onChange={e => setEditingTool({...editingTool, category: e.target.value as any})} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm cursor-pointer">
-                            {Object.values(ToolCategory).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        <select value={editingTool.category} onChange={e => setEditingTool({...editingTool, category: e.target.value})} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm cursor-pointer">
+                            {DEFAULT_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
                     </div>
                     <div>
@@ -299,12 +413,12 @@ const AdminToolManager: React.FC = () => {
                     <div className="p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700 space-y-4">
                         <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest text-center">Dalil Pendukung (Opsional)</p>
                         <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Teks Dalil (Arab/Terjemah)</label>
-                            <textarea rows={3} value={editingTool.relatedDalil?.text} onChange={e => setEditingTool({...editingTool, relatedDalil: { ...editingTool.relatedDalil!, text: e.target.value }})} className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm text-sm italic" placeholder="Tuliskan ayat atau hadits..." />
+                            <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-1.5 ml-1">Teks Dalil (Arab/Terjemah)</label>
+                            <textarea rows={3} value={editingTool.relatedDalilText || ''} onChange={e => setEditingTool({...editingTool, relatedDalilText: e.target.value})} className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm text-sm italic" placeholder="Tuliskan ayat atau hadits..." />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 ml-1">Sumber Dalil</label>
-                            <input type="text" value={editingTool.relatedDalil?.source} onChange={e => setEditingTool({...editingTool, relatedDalil: { ...editingTool.relatedDalil!, source: e.target.value }})} className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm text-xs" placeholder="Contoh: QS. Al-Furqan: 67" />
+                            <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase mb-1.5 ml-1">Sumber Dalil</label>
+                            <input type="text" value={editingTool.relatedDalilSource || ''} onChange={e => setEditingTool({...editingTool, relatedDalilSource: e.target.value})} className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-sm text-xs" placeholder="Contoh: QS. Al-Furqan: 67" />
                         </div>
                     </div>
 
@@ -328,7 +442,20 @@ const AdminToolManager: React.FC = () => {
                 </form>
             </div>
         </div>
+        </ModalPortal>
       )}
+
+      <ConfirmModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={modalAction || undefined}
+        title={modalTitle}
+        message={modalMessage}
+        type={modalType}
+        showCancel={modalShowCancel}
+        confirmText={modalShowCancel ? 'Ya, Hapus' : 'OK'}
+        cancelText="Batal"
+      />
     </div>
   );
 };

@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { aiApi, tasksApi } from '@/lib/api-services';
 import { 
   WandSparklesIcon, ClipboardIcon, CheckIcon, 
   CalendarDaysIcon, UsersIcon, PaperAirplaneIcon, 
-  DocumentCheckIcon, BookOpenIcon, SparklesIcon 
+  DocumentCheckIcon, BookOpenIcon, SparklesIcon,
+  PlusIcon, XMarkIcon
 } from '@/components/common/Icons';
 import { Skeleton, SkeletonText } from '@/components/common/Skeleton';
 
@@ -17,6 +18,19 @@ const syariahPrinciples = [
   "Ridha (Kerelaan)",
 ];
 
+interface SuggestedTask {
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  resetCycle?: 'one-time' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  hasLimit?: boolean;
+  targetValue?: number;
+  unit?: string;
+  incrementValue?: number;
+  perCheckEnabled?: boolean;
+}
+
 interface StrategicPlan {
   title: string;
   summary: string;
@@ -26,6 +40,7 @@ interface StrategicPlan {
     actions: string[];
   }[];
   maqasidSyariah: string;
+  suggestedTasks: SuggestedTask[];
 }
 
 const AIGenerator: React.FC = () => {
@@ -36,6 +51,8 @@ const AIGenerator: React.FC = () => {
     const [plan, setPlan] = useState<StrategicPlan | null>(null);
     const [error, setError] = useState('');
     const [isCopied, setIsCopied] = useState(false);
+    const [acceptedTasks, setAcceptedTasks] = useState<Set<number>>(new Set());
+    const [addingTaskId, setAddingTaskId] = useState<number | null>(null);
 
     const handlePrincipleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value, checked } = e.target;
@@ -56,46 +73,15 @@ const AIGenerator: React.FC = () => {
         setPlan(null);
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            
-            const prompt = `Anda adalah konsultan strategis Manajemen Syariah. Buat rencana strategis POAC Islami (Planning, Organizing, Actuating, Controlling) untuk:
-            Jenis Entitas: ${entityType}
-            Tujuan: ${goal}
-            Prinsip: ${principles.join(', ')}
-            
-            Berikan hasil dalam format JSON yang mendalam dan inspiratif.`;
-
-            const response = await ai.models.generateContent({
-                model: "gemini-3-pro-preview",
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            title: { type: Type.STRING },
-                            summary: { type: Type.STRING },
-                            phases: {
-                                type: Type.ARRAY,
-                                items: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        name: { type: Type.STRING, description: "Nama fase, misal: Perencanaan (Takhthith)" },
-                                        description: { type: Type.STRING },
-                                        actions: { type: Type.ARRAY, items: { type: Type.STRING } }
-                                    },
-                                    required: ["name", "description", "actions"]
-                                }
-                            },
-                            maqasidSyariah: { type: Type.STRING, description: "Kaitan rencana ini dengan perlindungan agama, jiwa, akal, keturunan, atau harta." }
-                        },
-                        required: ["title", "summary", "phases", "maqasidSyariah"]
-                    }
-                }
+            const context = `Jenis Entitas: ${entityType}\nPrinsip: ${principles.join(', ')}`;
+            const result = await aiApi.generatePlan({
+                goals: goal,
+                context: context,
             });
 
-            const result = JSON.parse(response.text || '{}');
-            setPlan(result);
+            // Parse the plan JSON from the response
+            const planData = JSON.parse(result.plan);
+            setPlan(planData);
         } catch (err) {
             console.error("Error generating plan:", err);
             setError("Terjadi kesalahan saat menyusun rencana strategis. Silakan coba lagi.");
@@ -112,6 +98,53 @@ const AIGenerator: React.FC = () => {
         navigator.clipboard.writeText(text);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    const handleAcceptTask = async (index: number) => {
+        if (!plan?.suggestedTasks[index]) return;
+        
+        const task = plan.suggestedTasks[index];
+        setAddingTaskId(index);
+        
+        try {
+            await tasksApi.create({
+                text: task.title,
+                category: task.category,
+                resetCycle: task.resetCycle || 'one-time',
+                hasLimit: task.hasLimit || false,
+                targetValue: task.targetValue,
+                unit: task.unit,
+                incrementValue: task.incrementValue,
+                perCheckEnabled: task.perCheckEnabled || false,
+            });
+            setAcceptedTasks(prev => new Set([...prev, index]));
+        } catch (err) {
+            console.error('Failed to add task:', err);
+        } finally {
+            setAddingTaskId(null);
+        }
+    };
+
+    const handleRejectTask = (index: number) => {
+        setAcceptedTasks(prev => new Set([...prev, index]));
+    };
+
+    const getPriorityColor = (priority: string) => {
+        switch (priority) {
+            case 'high': return 'text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
+            case 'medium': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20';
+            case 'low': return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
+            default: return 'text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20';
+        }
+    };
+
+    const getPriorityLabel = (priority: string) => {
+        switch (priority) {
+            case 'high': return 'Prioritas Tinggi';
+            case 'medium': return 'Prioritas Sedang';
+            case 'low': return 'Prioritas Rendah';
+            default: return priority;
+        }
     };
 
     const getPhaseIcon = (name: string) => {
@@ -181,7 +214,7 @@ const AIGenerator: React.FC = () => {
                     <button
                         onClick={handleGenerate}
                         disabled={isLoading}
-                        className="w-full py-4 bg-primary-600 text-white font-bold rounded-xl shadow-lg hover:bg-primary-700 transition active:scale-95 disabled:bg-gray-300 flex items-center justify-center space-x-2"
+                        className="w-full py-4 bg-primary-600 text-white font-bold rounded-xl shadow-lg hover:bg-primary-700 transition active:scale-95 disabled:bg-gray-300 dark:disabled:bg-gray-600 flex items-center justify-center space-x-2"
                     >
                         {isLoading ? (
                             <>
@@ -301,20 +334,111 @@ const AIGenerator: React.FC = () => {
                                 ))}
                             </div>
 
-                            <div className="bg-gradient-to-r from-primary-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+                            <div className="bg-gradient-to-r from-primary-600 to-indigo-600 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                                <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6">
-                                    <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-md self-start border border-white/20">
-                                        <BookOpenIcon className="w-9 h-9 text-white" />
+                                <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4">
+                                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md self-start border border-white/20">
+                                        <BookOpenIcon className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h4 className="text-xl font-bold mb-1 tracking-tight">Penyelarasan Maqasid Syariah</h4>
+                                        <h4 className="text-lg font-bold mb-1 tracking-tight">Penyelarasan Maqasid Syariah</h4>
                                         <p className="text-primary-50 text-sm leading-relaxed opacity-90 font-medium">
                                             {plan.maqasidSyariah}
                                         </p>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Suggested Tasks Section */}
+                            {plan.suggestedTasks && plan.suggestedTasks.length > 0 && (
+                                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md border border-gray-100 dark:border-gray-700">
+                                    <div className="flex items-center space-x-2 mb-4">
+                                        <SparklesIcon className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400">Daftar Tugas yang Disarankan</span>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        {plan.suggestedTasks.map((task, i) => {
+                                            const isAccepted = acceptedTasks.has(i);
+                                            const isAdding = addingTaskId === i;
+                                            
+                                            return (
+                                                <div 
+                                                    key={i} 
+                                                    className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                                                        isAccepted 
+                                                            ? 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 opacity-60' 
+                                                            : 'bg-gray-50/50 dark:bg-gray-900/30 border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-800'
+                                                    }`}
+                                                >
+                                                    <div className="flex-1 min-w-0 mr-3">
+                                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${getPriorityColor(task.priority)}`}>
+                                                                {getPriorityLabel(task.priority)}
+                                                            </span>
+                                                            <span className="text-[9px] text-gray-400 dark:text-gray-500 uppercase">
+                                                                {task.category}
+                                                            </span>
+                                                            {task.resetCycle && task.resetCycle !== 'one-time' && (
+                                                                <span className="text-[9px] text-primary-500 dark:text-primary-400 uppercase">
+                                                                    • {task.resetCycle === 'daily' ? 'Harian' : task.resetCycle === 'weekly' ? 'Mingguan' : task.resetCycle === 'monthly' ? 'Bulanan' : 'Tahunan'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className={`text-sm font-medium ${isAccepted ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300'}`}>
+                                                            {task.title}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+                                                            {task.description}
+                                                        </p>
+                                                        {task.hasLimit && task.targetValue && (
+                                                            <div className="flex items-center gap-2 mt-1.5">
+                                                                <span className="text-[9px] font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 px-2 py-0.5 rounded-full">
+                                                                    Target: {task.targetValue.toLocaleString()} {task.unit || ''}
+                                                                </span>
+                                                                {task.perCheckEnabled && (
+                                                                    <span className="text-[9px] text-gray-400 dark:text-gray-500">
+                                                                        +{task.incrementValue || 1} per klik
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {!isAccepted ? (
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                onClick={() => handleAcceptTask(i)}
+                                                                disabled={isAdding}
+                                                                className="p-2 text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition disabled:opacity-50"
+                                                                title="Tambahkan ke daftar tugas"
+                                                            >
+                                                                {isAdding ? (
+                                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                                ) : (
+                                                                    <PlusIcon className="w-4 h-4" />
+                                                                )}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleRejectTask(i)}
+                                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                                                                title="Tolak tugas"
+                                                            >
+                                                                <XMarkIcon className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-medium">
+                                                            <CheckIcon className="w-4 h-4" />
+                                                            <span>Ditambahkan</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

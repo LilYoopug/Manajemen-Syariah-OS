@@ -28,7 +28,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, change, changeType, ico
   }
 
   const isIncrease = changeType === 'increase';
-  const changeColor = isIncrease ? 'text-green-500' : 'text-red-500';
+  const changeColor = isIncrease ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400';
 
   return (
     <div className="bg-white dark:bg-gray-800 p-4 lg:p-4 xl:p-6 rounded-2xl shadow-md flex items-center space-x-3 transition hover:shadow-lg hover:scale-105 min-w-0 overflow-hidden">
