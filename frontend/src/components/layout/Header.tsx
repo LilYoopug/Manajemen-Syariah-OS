@@ -1,15 +1,24 @@
-
 import React from 'react';
-import { SunIcon, MoonIcon, MenuIcon, ChatBubbleLeftRightIcon, DashboardIcon } from '@/components/common/Icons';
+import { SunIcon, MoonIcon, MenuIcon, ChatBubbleLeftRightIcon, DashboardIcon, UserIcon } from '@/components/common/Icons';
+import type { User } from '@/types/auth';
 
 interface HeaderProps {
   toggleTheme: () => void;
   theme: 'light' | 'dark';
   setSidebarOpen: (isOpen: boolean) => void;
   onOpenAssistant: () => void;
+  user?: User | null;
+  onLogout: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ toggleTheme, theme, setSidebarOpen, onOpenAssistant }) => {
+const Header: React.FC<HeaderProps> = ({ toggleTheme, theme, setSidebarOpen, onOpenAssistant, user, onLogout }) => {
+  // Get user initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const initials = user?.name ? getInitials(user.name) : 'U';
+
   return (
     <header className="flex-shrink-0 bg-white dark:bg-gray-800 shadow-md z-20">
       <div className="flex items-center justify-between p-4 h-16">
@@ -20,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, theme, setSidebarOpen, onO
           >
             <MenuIcon className="h-6 w-6" />
           </button>
-          
+
           {/* Logo & Brand - Mobile */}
           <div className="flex items-center ml-2 lg:hidden">
             <div className="p-1 bg-primary-600 rounded mr-2">
@@ -52,11 +61,17 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, theme, setSidebarOpen, onO
           </button>
           <div className="relative pl-2 sm:pl-0">
             <button className="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
-              <img
-                className="h-8 w-8 rounded-full object-cover"
-                src="https://picsum.photos/100"
-                alt="User"
-              />
+              {user?.profilePicture ? (
+                <img
+                  className="h-8 w-8 rounded-full object-cover"
+                  src={user.profilePicture}
+                  alt={user.name || 'User'}
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold">
+                  {initials}
+                </div>
+              )}
             </button>
           </div>
         </div>
