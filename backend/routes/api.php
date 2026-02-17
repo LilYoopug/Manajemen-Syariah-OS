@@ -18,10 +18,28 @@ Route::get('/health', function () {
     return response()->json(['status' => 'ok']);
 });
 
-// Auth routes (public)
-Route::prefix('auth')->group(function () {
+// Islamic source routes (public - external API proxies)
+Route::prefix('islamic')->group(function () {
+    Route::get('/surahs', [\App\Http\Controllers\Api\IslamicSourceController::class, 'getSurahs']);
+    Route::get('/surahs/{number}', [\App\Http\Controllers\Api\IslamicSourceController::class, 'getSurah']);
+    Route::get('/surahs/{surah}/verse/{verse}', [\App\Http\Controllers\Api\IslamicSourceController::class, 'getVerse']);
+    Route::get('/hadith-books', [\App\Http\Controllers\Api\IslamicSourceController::class, 'getHadithBooks']);
+    Route::get('/hadith/{book}/{number}', [\App\Http\Controllers\Api\IslamicSourceController::class, 'getHadith']);
+});
+
+// Auth routes (public) - with rate limiting for security
+Route::prefix('auth')->middleware('throttle:5,1')->group(function () {
     Route::post('/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
     Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+    Route::post('/email/verification-notification', [\App\Http\Controllers\Api\AuthController::class, 'resendVerification']);
+    Route::get('/email/verify/{id}/{hash}', [\App\Http\Controllers\Api\AuthController::class, 'verifyEmail'])
+        ->name('verification.verify');
+});
+
+// Password reset routes (public) - with rate limiting
+Route::prefix('auth')->middleware('throttle:3,1')->group(function () {
+    Route::post('/forgot-password', [\App\Http\Controllers\Api\AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [\App\Http\Controllers\Api\AuthController::class, 'resetPassword']);
 });
 
 // Protected routes (require authentication)
@@ -42,6 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'show']);
     Route::put('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'update']);
     Route::patch('/tasks/{id}/toggle', [\App\Http\Controllers\Api\TaskController::class, 'toggle']);
+    Route::post('/tasks/{id}/progress', [\App\Http\Controllers\Api\TaskController::class, 'addProgress']);
+
     Route::delete('/tasks/{id}', [\App\Http\Controllers\Api\TaskController::class, 'destroy']);
     Route::put('/tasks/{id}/history/{entryId}', [\App\Http\Controllers\Api\TaskController::class, 'updateHistory']);
     Route::delete('/tasks/{id}/history/{entryId}', [\App\Http\Controllers\Api\TaskController::class, 'destroyHistory']);
@@ -66,6 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Admin routes (Epic 8)
     Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/stats/export', [\App\Http\Controllers\Api\Admin\StatsController::class, 'export']);
+        Route::get('/stats/user-growth', [\App\Http\Controllers\Api\Admin\StatsController::class, 'userGrowth']);
         Route::get('/stats', [\App\Http\Controllers\Api\Admin\StatsController::class, 'index']);
         Route::get('/logs', [\App\Http\Controllers\Api\Admin\ActivityLogController::class, 'index']);
         Route::get('/users/export', [\App\Http\Controllers\Api\Admin\UserController::class, 'export']);
@@ -73,6 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users', [\App\Http\Controllers\Api\Admin\UserController::class, 'store']);
         Route::put('/users/{user}', [\App\Http\Controllers\Api\Admin\UserController::class, 'update']);
         Route::delete('/users/{user}', [\App\Http\Controllers\Api\Admin\UserController::class, 'destroy']);
+        Route::get('/tools/export', [\App\Http\Controllers\Api\Admin\ToolController::class, 'export']);
         Route::get('/tools', [\App\Http\Controllers\Api\Admin\ToolController::class, 'index']);
         Route::post('/tools', [\App\Http\Controllers\Api\Admin\ToolController::class, 'store']);
         Route::put('/tools/{tool}', [\App\Http\Controllers\Api\Admin\ToolController::class, 'update']);

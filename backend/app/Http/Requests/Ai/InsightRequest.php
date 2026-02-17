@@ -23,10 +23,9 @@ class InsightRequest extends FormRequest
     {
         return [
             'kpiData' => ['required', 'array'],
-            'kpiData.totalTasks' => ['nullable', 'integer'],
-            'kpiData.completedTasks' => ['nullable', 'integer'],
-            'kpiData.completionRate' => ['nullable', 'numeric'],
-            'kpiData.categories' => ['nullable', 'array'],
+            'goalData' => ['nullable', 'array'],
+            // Allow flexible KPI data structure - each key can be an object with value/change
+            'kpiData.*' => ['nullable'],
         ];
     }
 

@@ -25,7 +25,7 @@ class UpdateTaskRequest extends FormRequest
         return [
             'text' => ['sometimes', 'string', 'max:255'],
             'category' => ['sometimes', 'string', 'max:100'],
-            'resetCycle' => ['nullable', 'string', Rule::in(['daily', 'weekly', 'monthly', 'yearly'])],
+            'resetCycle' => ['nullable', 'string', Rule::in(['one-time', 'daily', 'weekly', 'monthly', 'yearly'])],
             'hasLimit' => ['sometimes', 'boolean'],
             'targetValue' => ['nullable', 'integer', 'min:0', 'required_if:hasLimit,true'],
             'unit' => ['nullable', 'string', 'max:50', 'required_if:hasLimit,true'],
@@ -45,7 +45,7 @@ class UpdateTaskRequest extends FormRequest
             'text.string' => 'Task description must be a string.',
             'text.max' => 'Task description may not be greater than 255 characters.',
             'category.string' => 'Category must be a string.',
-            'resetCycle.in' => 'Reset cycle must be one of: daily, weekly, monthly, yearly.',
+            'resetCycle.in' => 'Reset cycle must be one of: one-time, daily, weekly, monthly, yearly.',
             'targetValue.required_if' => 'Target value is required when has limit is enabled.',
             'targetValue.integer' => 'Target value must be a number.',
             'targetValue.min' => 'Target value must be at least 0.',

@@ -25,7 +25,7 @@ class ActivityLogService
             'metadata' => $metadata,
         ];
 
-        if ($subject) {
+        if ($subject && is_object($subject)) {
             $logData['subject_type'] = get_class($subject);
             $logData['subject_id'] = $subject->id;
         }

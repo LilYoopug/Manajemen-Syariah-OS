@@ -1,0 +1,93 @@
+/* Fix for mobile browser viewport height (address bar issue) */
+/* This ensures modal overlays cover the full screen on mobile */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100%;
+  min-height: 100dvh; /* Dynamic viewport height - accounts for mobile browser UI */
+}
+
+/* Ensure modal overlays use dynamic viewport height on mobile */
+.fixed {
+  position: fixed;
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Critical fix for modal overlays on mobile - use dynamic viewport height */
+/* This fixes the gap at the top when mobile browser address bar is visible */
+[class*="fixed"][class*="inset-0"] {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height - works better on mobile */
+  width: 100vw;
+  width: 100dvw;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Markdown content styling for AI-generated content */
+.maqasid-content p {
+  margin-bottom: 0.5rem;
+}
+
+.maqasid-content p:last-child {
+  margin-bottom: 0;
+}
+
+.maqasid-content ol {
+  list-style-type: decimal;
+  list-style-position: inside;
+  margin: 0.5rem 0;
+}
+
+.maqasid-content ul {
+  list-style-type: disc;
+  list-style-position: inside;
+  margin: 0.5rem 0;
+}
+
+.maqasid-content li {
+  margin-bottom: 0.25rem;
+}
+
+.maqasid-content strong {
+  font-weight: 700;
+  color: white;
+}
+
+.maqasid-content em {
+  font-style: italic;
+}
+

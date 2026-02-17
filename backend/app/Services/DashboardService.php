@@ -58,18 +58,21 @@ class DashboardService
         $tasksWithTargets = $tasks->where('has_limit', true)
             ->where('target_value', '>', 0);
 
-        $goals = $tasksWithTargets->groupBy('category')->map(function ($categoryTasks, $category) {
-            $totalCurrentValue = $categoryTasks->sum('current_value');
-            $totalTargetValue = $categoryTasks->sum('target_value');
-            $progress = $totalTargetValue > 0 ? round(($totalCurrentValue / $totalTargetValue) * 100) : 0;
+        $goals = [];
 
-            return [
-                'category' => $category,
-                'currentValue' => $totalCurrentValue,
-                'targetValue' => $totalTargetValue,
-                'progress' => min(100, $progress),
+        foreach ($tasksWithTargets as $task) {
+            $progress = $task->target_value > 0 ? round(($task->current_value / $task->target_value) * 100) : 0;
+
+            $goals[] = [
+                'id' => (string) $task->id,
+                'title' => $task->text,
+                'target' => (int) $task->target_value,
+                'progress' => (int) $task->current_value,
+                'unit' => $task->unit ?? '',
+                'percentage' => min(100, $progress),
+                'resetCycle' => $task->reset_cycle ?? 'one-time',
             ];
-        })->values()->toArray();
+        }
 
         // Calculate overall progress
         $overallCurrentValue = $tasksWithTargets->sum('current_value');

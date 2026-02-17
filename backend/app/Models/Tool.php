@@ -37,10 +37,10 @@ class Tool extends Model
     protected function casts(): array
     {
         return [
+            'related_directory_ids' => 'array',
             'inputs' => 'array',
             'outputs' => 'array',
             'benefits' => 'array',
-            'related_directory_ids' => 'array',
         ];
     }
 }

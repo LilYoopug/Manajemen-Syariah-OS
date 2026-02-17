@@ -287,6 +287,69 @@ class TaskController extends Controller
     }
 
     /**
+     * Add custom progress value to a task.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function addProgress(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'value' => 'required|numeric|min:0.01',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        $user = $request->user();
+        $task = $user->tasks()->findOrFail($id);
+
+        // Only allow progress addition for tasks with limit
+        if (!$task->has_limit) {
+            return response()->json([
+                'message' => 'This task does not support progress tracking',
+            ], 400);
+        }
+
+        $value = (float) $request->value;
+        $note = $request->note;
+
+        DB::transaction(function () use ($task, $value, $note): void {
+            $newValue = $task->current_value + $value;
+            $targetValue = $task->target_value ?? 0;
+
+            // Calculate progress
+            $progress = $targetValue > 0 ? min(100, (int) round(($newValue / $targetValue) * 100)) : 0;
+
+            // Check if target reached
+            $completed = $targetValue > 0 && $newValue >= $targetValue;
+
+            $task->update([
+                'current_value' => $newValue,
+                'progress' => $progress,
+                'completed' => $completed,
+            ]);
+
+            // Create history entry
+            TaskHistory::create([
+                'task_id' => $task->id,
+                'value' => $value,
+                'note' => $note,
+                'timestamp' => now(),
+            ]);
+
+            // Log activity
+            $action = $completed ? 'task.completed' : 'task.progressed';
+            $this->activityLogService->logCrud($action, $task);
+        });
+
+        return response()->json([
+            'message' => 'Progress added successfully',
+            'data' => new TaskResource($task->fresh()->load('history')),
+        ]);
+    }
+
+
+    /**
      * Update a history entry.
      *
      * @param UpdateHistoryRequest $request

@@ -57,6 +57,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'folder',
             'parent_id' => null,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -140,6 +141,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => null,
             'content' => json_encode(['explanation' => 'Original']),
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -173,6 +175,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => null,
             'content' => json_encode(['dalil' => 'Old dalil']),
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -205,6 +208,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'folder',
             'parent_id' => null,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $folder2 = DirectoryItem::create([
@@ -212,6 +216,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'folder',
             'parent_id' => null,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $item = DirectoryItem::create([
@@ -219,6 +224,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => $folder1->id,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -246,6 +252,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'folder',
             'parent_id' => null,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $item = DirectoryItem::create([
@@ -253,6 +260,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => $folder->id,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -280,6 +288,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => null,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -307,6 +316,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'folder',
             'parent_id' => null,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $child1 = DirectoryItem::create([
@@ -314,6 +324,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => $folder->id,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $child2 = DirectoryItem::create([
@@ -321,6 +332,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => $folder->id,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $nestedFolder = DirectoryItem::create([
@@ -328,6 +340,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'folder',
             'parent_id' => $folder->id,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $nestedItem = DirectoryItem::create([
@@ -335,6 +348,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => $nestedFolder->id,
             'content' => null,
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)
@@ -548,6 +562,7 @@ class DirectoryCrudTest extends TestCase
             'type' => 'item',
             'parent_id' => null,
             'content' => json_encode(['dalil' => 'Original content']),
+            'user_id' => $user->id,
         ]);
 
         $response = $this->actingAs($user)

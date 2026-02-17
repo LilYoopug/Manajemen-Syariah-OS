@@ -57,10 +57,7 @@ class AiController extends Controller
             $goals = $request->input('goals');
             $context = $request->input('context');
 
-            $result = $this->aiProxyService->generatePlan([
-                'goals' => $goals,
-                'context' => $context,
-            ]);
+            $result = $this->aiProxyService->generatePlan($goals, $context);
 
             return response()->json([
                 'data' => $result,
@@ -82,8 +79,12 @@ class AiController extends Controller
     {
         try {
             $kpiData = $request->input('kpiData');
+            $goalData = $request->input('goalData', []);
 
-            $result = $this->aiProxyService->insight($kpiData);
+            $result = $this->aiProxyService->insight([
+                'kpiData' => $kpiData,
+                'goalData' => $goalData,
+            ]);
 
             return response()->json([
                 'data' => $result,

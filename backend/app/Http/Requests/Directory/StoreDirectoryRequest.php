@@ -26,9 +26,19 @@ class StoreDirectoryRequest extends FormRequest
             'type' => ['required', 'in:folder,item'],
             'parentId' => ['nullable', 'exists:directory_items,id'],
             'content' => ['nullable', 'array'],
-            'content.dalil' => ['nullable', 'string'],
-            'content.source' => ['nullable', 'string', 'max:255'],
-            'content.explanation' => ['nullable', 'string'],
+            'content.sources' => ['nullable', 'array'],
+            'content.sources.*.type' => ['required', 'in:quran,hadith,website,none'],
+            // Quran source validation
+            'content.sources.*.surah' => ['required_if:content.sources.*.type,quran', 'integer', 'min:1', 'max:114'],
+            'content.sources.*.verse' => ['required_if:content.sources.*.type,quran', 'integer', 'min:1'],
+            // Hadith source validation
+            'content.sources.*.book' => ['required_if:content.sources.*.type,hadith', 'string', 'max:50'],
+            'content.sources.*.number' => ['required_if:content.sources.*.type,hadith', 'integer', 'min:1'],
+            // Website source validation
+            'content.sources.*.title' => ['required_if:content.sources.*.type,website', 'string', 'max:255'],
+            'content.sources.*.url' => ['required_if:content.sources.*.type,website', 'url', 'max:500'],
+            // Explanation
+            'content.explanation' => ['nullable', 'string', 'max:10000'],
         ];
     }
 
@@ -40,11 +50,19 @@ class StoreDirectoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Title is required.',
-            'title.max' => 'Title may not be greater than 255 characters.',
-            'type.required' => 'Type is required.',
-            'type.in' => 'Type must be either folder or item.',
-            'parentId.exists' => 'Parent directory does not exist.',
+            'title.required' => 'Judul wawasan wajib diisi.',
+            'title.max' => 'Judul tidak boleh lebih dari 255 karakter.',
+            'type.required' => 'Tipe wawasan wajib dipilih.',
+            'type.in' => 'Tipe harus folder atau item.',
+            'parentId.exists' => 'Direktori induk tidak ditemukan.',
+            'content.sources.*.type.in' => 'Tipe sumber harus quran, hadith, website, atau none.',
+            'content.sources.*.surah.required_if' => 'Surah wajib dipilih untuk sumber Quran.',
+            'content.sources.*.verse.required_if' => 'Ayat wajib diisi untuk sumber Quran.',
+            'content.sources.*.book.required_if' => 'Kitab hadist wajib dipilih untuk sumber Hadist.',
+            'content.sources.*.number.required_if' => 'Nomor hadist wajib diisi untuk sumber Hadist.',
+            'content.sources.*.title.required_if' => 'Judul website wajib diisi.',
+            'content.sources.*.url.required_if' => 'URL website wajib diisi.',
+            'content.sources.*.url.url' => 'Format URL tidak valid.',
         ];
     }
 }

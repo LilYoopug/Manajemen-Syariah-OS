@@ -1,6 +1,6 @@
 # Story 8.1: Admin Platform Statistics
 
-Status: review
+Status: done
 
 ## Story
 

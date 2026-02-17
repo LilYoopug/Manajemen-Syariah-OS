@@ -25,7 +25,7 @@ class StoreTaskRequest extends FormRequest
         return [
             'text' => ['required', 'string', 'max:255'],
             'category' => ['required', 'string', 'max:100'],
-            'resetCycle' => ['nullable', 'string', Rule::in(['daily', 'weekly', 'monthly', 'yearly'])],
+            'resetCycle' => ['nullable', 'string', Rule::in(['one-time', 'daily', 'weekly', 'monthly', 'yearly'])],
             'hasLimit' => ['nullable', 'boolean'],
             'targetValue' => ['nullable', 'integer', 'min:0', 'required_if:hasLimit,true'],
             'unit' => ['nullable', 'string', 'max:50', 'required_if:hasLimit,true'],
@@ -45,7 +45,7 @@ class StoreTaskRequest extends FormRequest
             'text.required' => 'Task description is required.',
             'text.max' => 'Task description may not be greater than 255 characters.',
             'category.required' => 'Category is required.',
-            'resetCycle.in' => 'Reset cycle must be one of: daily, weekly, monthly, yearly.',
+            'resetCycle.in' => 'Reset cycle must be one of: one-time, daily, weekly, monthly, yearly.',
             'targetValue.required_if' => 'Target value is required when has limit is enabled.',
             'targetValue.integer' => 'Target value must be a number.',
             'targetValue.min' => 'Target value must be at least 0.',

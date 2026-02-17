@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
+use App\Services\IslamicSourceService;
 
 class DirectoryResource extends JsonResource
 {
@@ -24,12 +25,11 @@ class DirectoryResource extends JsonResource
         if ($this->type === 'item' && $this->content) {
             $content = json_decode($this->content, true);
             if ($content) {
-                if (isset($content['dalil'])) {
-                    $data['dalil'] = $content['dalil'];
+                // New structure with sources array
+                if (isset($content['sources']) && is_array($content['sources'])) {
+                    $data['sources'] = $content['sources'];
                 }
-                if (isset($content['source'])) {
-                    $data['source'] = $content['source'];
-                }
+                // Explanation
                 if (isset($content['explanation'])) {
                     $data['explanation'] = $content['explanation'];
                 }
@@ -81,12 +81,11 @@ class DirectoryResource extends JsonResource
         if ($item->type === 'item' && $item->content) {
             $content = json_decode($item->content, true);
             if ($content) {
-                if (isset($content['dalil'])) {
-                    $data['dalil'] = $content['dalil'];
+                // New structure with sources array
+                if (isset($content['sources']) && is_array($content['sources'])) {
+                    $data['sources'] = $content['sources'];
                 }
-                if (isset($content['source'])) {
-                    $data['source'] = $content['source'];
-                }
+                // Explanation
                 if (isset($content['explanation'])) {
                     $data['explanation'] = $content['explanation'];
                 }

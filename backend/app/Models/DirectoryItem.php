@@ -18,6 +18,7 @@ class DirectoryItem extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'user_id',
         'parent_id',
         'title',
         'type',
@@ -37,6 +38,14 @@ class DirectoryItem extends Model
     }
 
     /**
+     * Get the user that owns this directory item.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
      * Get the parent directory item.
      */
     public function parent(): BelongsTo
@@ -50,5 +59,16 @@ class DirectoryItem extends Model
     public function children(): HasMany
     {
         return $this->hasMany(DirectoryItem::class, 'parent_id');
+    }
+
+    /**
+     * Scope to get items for a specific user (including shared/system items).
+     */
+    public function scopeForUser($query, ?int $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->where('user_id', $userId)
+              ->orWhereNull('user_id'); // System-wide items
+        });
     }
 }

@@ -22,8 +22,7 @@ class GeneratePlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'goals' => ['required', 'array'],
-            'goals.*' => ['string'],
+            'goals' => ['required', 'string', 'max:5000'],
             'context' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -36,8 +35,9 @@ class GeneratePlanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'goals.required' => 'Goals are required for plan generation.',
-            'goals.array' => 'Goals must be provided as a list.',
+            'goals.required' => 'Tujuan utama wajib diisi.',
+            'goals.string' => 'Tujuan harus berupa teks.',
+            'goals.max' => 'Tujuan tidak boleh lebih dari 5000 karakter.',
         ];
     }
 }

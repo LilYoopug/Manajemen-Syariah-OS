@@ -44,9 +44,12 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | SECURITY: Tokens expire after 7 days (10080 minutes) to limit exposure
+    | from stolen tokens. Users can re-authenticate to get a new token.
+    |
     */
 
-    'expiration' => null,
+    'expiration' => 10080, // 7 days
 
     /*
     |--------------------------------------------------------------------------

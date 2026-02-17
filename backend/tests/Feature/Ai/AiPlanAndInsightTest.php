@@ -48,7 +48,7 @@ class AiPlanAndInsightTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => ['Increase task completion', 'Improve consistency'],
+                'goals' => 'Increase task completion and improve consistency',
                 'context' => 'Small business owner focusing on daily habits',
             ]);
 
@@ -88,7 +88,7 @@ class AiPlanAndInsightTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => ['Goal 1'],
+                'goals' => 'Goal 1 description',
             ]);
 
         $response->assertStatus(200)
@@ -114,15 +114,15 @@ class AiPlanAndInsightTest extends TestCase
     }
 
     /**
-     * Test generate plan goals must be array.
+     * Test generate plan goals must be string.
      */
-    public function test_generate_plan_goals_must_be_array(): void
+    public function test_generate_plan_goals_must_be_string(): void
     {
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => 'not an array',
+                'goals' => ['an', 'array'],
             ]);
 
         $response->assertStatus(422)
@@ -146,7 +146,7 @@ class AiPlanAndInsightTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => ['Goal 1'],
+                'goals' => 'Goal 1 description',
             ]);
 
         $response->assertStatus(503)
@@ -166,7 +166,7 @@ class AiPlanAndInsightTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => ['Goal 1'],
+                'goals' => 'Goal 1 description',
             ]);
 
         $response->assertStatus(503)
@@ -179,7 +179,7 @@ class AiPlanAndInsightTest extends TestCase
     public function test_unauthenticated_cannot_generate_plan(): void
     {
         $response = $this->postJson('/api/ai/generate-plan', [
-            'goals' => ['Goal 1'],
+            'goals' => 'Goal 1 description',
         ]);
 
         $response->assertStatus(401);
@@ -222,12 +222,12 @@ class AiPlanAndInsightTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    'insight',
+                    'insights',
                 ],
             ])
             ->assertJson([
                 'data' => [
-                    'insight' => 'This is a mock insight response.',
+                    'insights' => 'This is a mock insight response.',
                 ],
             ]);
     }
@@ -256,20 +256,16 @@ class AiPlanAndInsightTest extends TestCase
         $response = $this->actingAs($user)
             ->postJson('/api/ai/insight', [
                 'kpiData' => [
-                    'totalTasks' => 10,
-                    'completedTasks' => 7,
-                    'completionRate' => 0.7,
-                    'categories' => [
-                        ['name' => 'Ibadah', 'count' => 5],
-                        ['name' => 'Muamalah', 'count' => 5],
-                    ],
+                    'totalTasks' => ['value' => 10, 'change' => '+2'],
+                    'completedTasks' => ['value' => 7, 'change' => '+1'],
+                    'completionRate' => ['value' => '70%', 'change' => '+5%'],
                 ],
             ]);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    'insight',
+                    'insights',
                 ],
             ]);
     }
@@ -370,7 +366,7 @@ class AiPlanAndInsightTest extends TestCase
 
         $response->assertStatus(503)
             ->assertJson([
-                'message' => 'AI service is not configured',
+                'message' => 'Layanan AI belum dikonfigurasi. Silakan tambahkan API key.',
             ]);
     }
 
@@ -385,12 +381,12 @@ class AiPlanAndInsightTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => ['Goal 1'],
+                'goals' => 'Goal 1 description',
             ]);
 
         $response->assertStatus(503)
             ->assertJson([
-                'message' => 'AI service is not configured',
+                'message' => 'Layanan AI belum dikonfigurasi. Silakan tambahkan API key.',
             ]);
     }
 
@@ -431,7 +427,7 @@ class AiPlanAndInsightTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'data' => [
-                    'insight' => '',
+                    'insights' => '',
                 ],
             ]);
     }
@@ -451,7 +447,7 @@ class AiPlanAndInsightTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/api/ai/generate-plan', [
-                'goals' => ['Goal 1'],
+                'goals' => 'Goal 1 description',
             ]);
 
         $response->assertStatus(200)

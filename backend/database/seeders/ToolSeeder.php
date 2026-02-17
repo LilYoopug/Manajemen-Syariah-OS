@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Tool;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -352,5 +353,7 @@ class ToolSeeder extends Seeder
                 'updated_at' => now(),
             ]));
         }
+
+        $this->command->info('Tools seeded: ' . Tool::count());
     }
 }

@@ -26,13 +26,16 @@ class UpdateToolRequest extends FormRequest
             'category' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['sometimes', 'required', 'string'],
             'inputs' => ['nullable', 'array'],
+            'inputs.*' => ['string'],
             'outputs' => ['nullable', 'array'],
+            'outputs.*' => ['string'],
             'benefits' => ['nullable', 'array'],
-            'sharia_basis' => ['nullable', 'string'],
-            'link' => ['nullable', 'string', 'url', 'max:500'],
-            'related_directory_ids' => ['nullable', 'array'],
-            'related_dalil_text' => ['nullable', 'string'],
-            'related_dalil_source' => ['nullable', 'string', 'max:500'],
+            'benefits.*' => ['string'],
+            'shariaBasis' => ['nullable', 'string'],
+            'link' => ['nullable', 'string', 'max:500'],
+            'relatedDirectoryIds' => ['nullable', 'array'],
+            'relatedDalilText' => ['nullable', 'string'],
+            'relatedDalilSource' => ['nullable', 'string', 'max:500'],
         ];
     }
 
@@ -47,7 +50,20 @@ class UpdateToolRequest extends FormRequest
             'name.required' => 'Tool name is required.',
             'category.required' => 'Category is required.',
             'description.required' => 'Description is required.',
-            'link.url' => 'Link must be a valid URL.',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Map camelCase to snake_case
+        $this->merge([
+            'sharia_basis' => $this->shariaBasis,
+            'related_directory_ids' => $this->relatedDirectoryIds,
+            'related_dalil_text' => $this->relatedDalilText,
+            'related_dalil_source' => $this->relatedDalilSource,
+        ]);
     }
 }
