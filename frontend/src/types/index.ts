@@ -1,8 +1,18 @@
-
 // FIX: Import React to resolve 'Cannot find namespace React' error.
 import React from 'react';
 
-export type View = 'landing' | 'login' | 'register' | 'dashboard' | 'tasks' | 'tools' | 'generator' | 'settings' | 'admin_dashboard' | 'admin_users' | 'admin_tools';
+export type View =
+  | 'landing'
+  | 'login'
+  | 'register'
+  | 'dashboard'
+  | 'tasks'
+  | 'tools'
+  | 'generator'
+  | 'settings'
+  | 'admin_dashboard'
+  | 'admin_users'
+  | 'admin_tools';
 
 export type UserRole = 'admin' | 'user';
 
@@ -72,12 +82,12 @@ export interface Tool {
 }
 
 export enum ToolCategory {
-  Individu = "Individu/Keluarga",
-  Bisnis = "Bisnis Islami",
-  Lembaga = "Lembaga/Komunitas",
-  Keuangan = "Keuangan/Investasi",
-  Edukasi = "Edukasi",
-  Sosial = "Sosial/Umat",
+  Individu = 'Individu/Keluarga',
+  Bisnis = 'Bisnis Islami',
+  Lembaga = 'Lembaga/Komunitas',
+  Keuangan = 'Keuangan/Investasi',
+  Edukasi = 'Edukasi',
+  Sosial = 'Sosial/Umat',
 }
 
 export interface Kpi {

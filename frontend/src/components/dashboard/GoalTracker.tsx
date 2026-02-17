@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Goal } from '@/types';
 import { Skeleton } from '@/components/common/Skeleton';
@@ -40,10 +39,7 @@ const GoalTracker: React.FC<GoalTrackerProps> = ({
         <span className="text-xs text-gray-500 dark:text-gray-400">{deadline}</span>
       </div>
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-        <div
-          className="bg-primary-600 h-2 rounded-full"
-          style={{ width: `${percentage}%` }}
-        ></div>
+        <div className="bg-primary-600 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
       </div>
       <div className="flex justify-between text-xs">
         <span className="font-semibold text-gray-500 dark:text-gray-400">

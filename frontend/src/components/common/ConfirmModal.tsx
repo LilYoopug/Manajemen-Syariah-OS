@@ -1,5 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { ExclamationTriangleIcon, CheckCircleIcon, InformationCircleIcon, XCircleIcon, XMarkIcon } from './Icons';
+import {
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  InformationCircleIcon,
+  XCircleIcon,
+  XMarkIcon,
+} from './Icons';
 import ModalPortal from './ModalPortal';
 
 export type ConfirmModalType = 'warning' | 'success' | 'info' | 'error' | 'confirm';
@@ -86,7 +92,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <ModalPortal>
       <div
         ref={modalRef}
-        className="fixed inset-0 w-full h-full z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn p-4"
+        className="fixed inset-0 w-full h-full z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn p-4"
         onClick={handleBackdropClick}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scaleIn">

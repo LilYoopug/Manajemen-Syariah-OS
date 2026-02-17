@@ -1,0 +1,27 @@
+# Build output
+dist
+build
+
+# Dependencies
+node_modules
+
+# Cache
+.cache
+.parcel-cache
+
+# Config files (may have different formatting)
+*.config.js
+*.config.ts
+
+# Generated files
+coverage
+*.min.js
+*.min.css
+
+# Test results
+test-results
+playwright-report
+
+# Misc
+*.md
+*.json

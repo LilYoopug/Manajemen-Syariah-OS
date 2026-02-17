@@ -16,8 +16,8 @@ import AdminToolManager from '@/components/admin/AdminToolManager';
 import { HomeIcon } from '@/components/common/Icons';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { directoryApi } from '@/lib/api-directory';
+import { profileApi } from '@/lib/api-services';
 import type { DirectoryItem, View } from '@/types';
-
 
 type DateRange = '7' | '30' | 'all';
 
@@ -39,9 +39,9 @@ const AppContent: React.FC = () => {
   const [isAssistantOpen, setAssistantOpen] = useState(false);
   const [selectedDirectoryItem, setSelectedDirectoryItem] = useState<DirectoryItem | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    // Sync with user theme from backend, fallback to localStorage
-    if (user?.theme) return user.theme;
-    return localStorage.getItem('theme') as 'light' | 'dark' || 'light';
+    // Always prioritize localStorage theme to maintain consistency across login
+    // This prevents theme switching when logging in as different users
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const initialAuthCheckDone = useRef(false);
@@ -70,12 +70,8 @@ const AppContent: React.FC = () => {
     }
   }, [isAuthenticated, user?.role, fetchDirectoryData]);
 
-  // Sync theme with user preferences
-  useEffect(() => {
-    if (user?.theme && user.theme !== theme) {
-      setTheme(user.theme);
-    }
-  }, [user?.theme]);
+  // Theme sync with backend is disabled to maintain user's theme preference across login
+  // Users can change theme via Settings, which will update both localStorage and backend
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -98,7 +94,7 @@ const AppContent: React.FC = () => {
       if (isAuthenticated && user) {
         // User is logged in - redirect to appropriate dashboard
         const defaultView = user.role === 'admin' ? 'admin_dashboard' : 'dashboard';
-        setView(prev => {
+        setView((prev) => {
           if (['landing', 'login', 'register'].includes(prev)) {
             return defaultView;
           }
@@ -112,7 +108,7 @@ const AppContent: React.FC = () => {
     // After initial check, handle auth changes
     if (isAuthenticated && user) {
       const defaultView = user.role === 'admin' ? 'admin_dashboard' : 'dashboard';
-      setView(prev => {
+      setView((prev) => {
         if (['landing', 'login', 'register'].includes(prev)) {
           return defaultView;
         }
@@ -121,8 +117,19 @@ const AppContent: React.FC = () => {
     }
   }, [isAuthenticated, isLoading, user]);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  const toggleTheme = async () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+
+    // Also save to backend when authenticated
+    if (isAuthenticated) {
+      try {
+        await profileApi.update({ theme: newTheme });
+      } catch (error) {
+        console.error('Failed to save theme preference:', error);
+        // Theme is still saved to localStorage, so user experience is preserved
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -152,7 +159,14 @@ const AppContent: React.FC = () => {
       case 'generator':
         return <AIGenerator />;
       case 'settings':
-        return <Settings toggleTheme={toggleTheme} theme={theme} setView={setView} onLogout={handleLogout} />;
+        return (
+          <Settings
+            toggleTheme={toggleTheme}
+            theme={theme}
+            setView={setView}
+            onLogout={handleLogout}
+          />
+        );
       case 'admin_dashboard':
         return <AdminDashboard />;
       case 'admin_users':
@@ -169,15 +183,15 @@ const AppContent: React.FC = () => {
   if (isAuthOrLanding) {
     return (
       <div className={theme}>
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-          {renderView()}
-        </div>
+        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">{renderView()}</div>
       </div>
     );
   }
 
   return (
-    <div className={`${theme} flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans overflow-hidden`}>
+    <div
+      className={`${theme} flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 font-sans overflow-hidden`}
+    >
       <Sidebar
         view={view}
         setView={setView}
@@ -202,18 +216,15 @@ const AppContent: React.FC = () => {
           onLogout={handleLogout}
         />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
-           {(view === 'dashboard' || view === 'admin_dashboard') && (
-             <WelcomeBanner isAdmin={view === 'admin_dashboard'} userName={user?.name} />
-           )}
-           {renderView()}
+          {(view === 'dashboard' || view === 'admin_dashboard') && (
+            <WelcomeBanner isAdmin={view === 'admin_dashboard'} userName={user?.name} />
+          )}
+          {renderView()}
         </main>
       </div>
 
       {isAssistantOpen && (
-        <AIAssistant
-          onClose={() => setAssistantOpen(false)}
-          currentView={view}
-        />
+        <AIAssistant onClose={() => setAssistantOpen(false)} currentView={view} />
       )}
       {selectedDirectoryItem && (
         <DirectoryDetailModal
@@ -225,18 +236,25 @@ const AppContent: React.FC = () => {
   );
 };
 
-const WelcomeBanner: React.FC<{ isAdmin?: boolean; userName?: string }> = ({ isAdmin, userName }) => (
-  <div className={`mb-8 p-8 rounded-2xl bg-gradient-to-r ${isAdmin ? 'from-indigo-600 to-indigo-500' : 'from-primary-600 to-secondary-500'} text-white shadow-xl border border-white/10`}>
+const WelcomeBanner: React.FC<{ isAdmin?: boolean; userName?: string }> = ({
+  isAdmin,
+  userName,
+}) => (
+  <div
+    className={`mb-8 p-8 rounded-2xl bg-gradient-to-r ${isAdmin ? 'from-indigo-600 to-indigo-500' : 'from-primary-600 to-secondary-500'} text-white shadow-xl border border-white/10`}
+  >
     <div className="flex items-center space-x-5">
       <div className="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
-        <HomeIcon className="w-8 h-8"/>
+        <HomeIcon className="w-8 h-8" />
       </div>
       <div>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-            {isAdmin ? 'Admin Control SyariahOS' : `Selamat Datang${userName ? `, ${userName}` : ''}`}
+          {isAdmin ? 'Admin Control SyariahOS' : `Selamat Datang${userName ? `, ${userName}` : ''}`}
         </h1>
         <p className="mt-1 text-sm text-white/80 font-medium">
-            {isAdmin ? 'Pusat kendali operasional, integritas sistem, dan manajemen ummat.' : 'Platform terpadu untuk wawasan, alat, dan monitoring manajemen berbasis Syariah.'}
+          {isAdmin
+            ? 'Pusat kendali operasional, integritas sistem, dan manajemen ummat.'
+            : 'Platform terpadu untuk wawasan, alat, dan monitoring manajemen berbasis Syariah.'}
         </p>
       </div>
     </div>
@@ -244,7 +262,10 @@ const WelcomeBanner: React.FC<{ isAdmin?: boolean; userName?: string }> = ({ isA
 );
 
 // Error Boundary Component
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -266,8 +287,12 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">⚠️</span>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Something went wrong</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">{this.state.error?.message || 'An unexpected error occurred'}</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Something went wrong
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition"

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { aiApi, getErrorMessage } from '@/lib/api-services';
 import { SparklesIcon, CheckCircleIcon } from '@/components/common/Icons';
@@ -87,7 +86,10 @@ const parseMarkdown = (text: string): React.ReactNode[] => {
     if (trimmedLine.startsWith('#### ')) {
       if (inList) flushList();
       elements.push(
-        <h5 key={key++} className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-3 mb-1">
+        <h5
+          key={key++}
+          className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-3 mb-1"
+        >
           {trimmedLine.slice(5)}
         </h5>
       );
@@ -96,7 +98,10 @@ const parseMarkdown = (text: string): React.ReactNode[] => {
     if (trimmedLine.startsWith('### ')) {
       if (inList) flushList();
       elements.push(
-        <h4 key={key++} className="text-base font-semibold text-primary-700 dark:text-primary-300 mt-4 mb-2">
+        <h4
+          key={key++}
+          className="text-base font-semibold text-primary-700 dark:text-primary-300 mt-4 mb-2"
+        >
           {trimmedLine.slice(4)}
         </h4>
       );
@@ -105,7 +110,10 @@ const parseMarkdown = (text: string): React.ReactNode[] => {
     if (trimmedLine.startsWith('## ')) {
       if (inList) flushList();
       elements.push(
-        <h3 key={key++} className="text-lg font-semibold text-primary-800 dark:text-primary-200 mt-5 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600">
+        <h3
+          key={key++}
+          className="text-lg font-semibold text-primary-800 dark:text-primary-200 mt-5 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600"
+        >
           {trimmedLine.slice(3)}
         </h3>
       );
@@ -124,9 +132,7 @@ const parseMarkdown = (text: string): React.ReactNode[] => {
     // Horizontal rule
     if (trimmedLine === '---') {
       if (inList) flushList();
-      elements.push(
-        <hr key={key++} className="my-4 border-gray-200 dark:border-gray-600" />
-      );
+      elements.push(<hr key={key++} className="my-4 border-gray-200 dark:border-gray-600" />);
       return;
     }
 
@@ -170,27 +176,33 @@ const AIInsightCard: React.FC<AIInsightCardProps> = ({ kpiData = [], goalData = 
 
     try {
       const result = await aiApi.insight({
-        kpiData: (kpiData || []).reduce((acc, k) => {
-          if (k?.title) {
-            acc[k.title] = { value: k.value, change: k.change };
-          }
-          return acc;
-        }, {} as Record<string, unknown>),
-        goalData: (goalData || []).reduce((acc, g) => {
-          if (g?.title) {
-            acc[g.title] = {
-              progress: g.progress,
-              target: g.target,
-              unit: g.unit,
-              period: g.resetCycle || 'one-time'
-            };
-          }
-          return acc;
-        }, {} as Record<string, unknown>),
+        kpiData: (kpiData || []).reduce(
+          (acc, k) => {
+            if (k?.title) {
+              acc[k.title] = { value: k.value, change: k.change };
+            }
+            return acc;
+          },
+          {} as Record<string, unknown>
+        ),
+        goalData: (goalData || []).reduce(
+          (acc, g) => {
+            if (g?.title) {
+              acc[g.title] = {
+                progress: g.progress,
+                target: g.target,
+                unit: g.unit,
+                period: g.resetCycle || 'one-time',
+              };
+            }
+            return acc;
+          },
+          {} as Record<string, unknown>
+        ),
       });
       setInsight(result.insights || '');
     } catch (err) {
-      console.error("Error generating AI insight:", err);
+      console.error('Error generating AI insight:', err);
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
@@ -221,8 +233,20 @@ const AIInsightCard: React.FC<AIInsightCardProps> = ({ kpiData = [], goalData = 
           {isLoading ? (
             <>
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
               Memproses...
             </>
@@ -256,14 +280,17 @@ const AIInsightCard: React.FC<AIInsightCardProps> = ({ kpiData = [], goalData = 
           <div className="bg-white dark:bg-gray-700/50 p-5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
             <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100 dark:border-gray-600">
               <CheckCircleIcon className="w-5 h-5 text-green-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Saran dari AI</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Saran dari AI
+              </span>
             </div>
             <div className="prose prose-sm max-w-none dark:prose-invert">
               {parseMarkdown(insight)}
             </div>
           </div>
         ) : (
-          !isLoading && !error && (
+          !isLoading &&
+          !error && (
             <div className="text-center py-8">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full mb-3">
                 <SparklesIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />

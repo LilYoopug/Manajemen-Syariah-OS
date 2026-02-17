@@ -3,7 +3,13 @@
  */
 
 import React, { useState } from 'react';
-import { DashboardIcon, EyeIcon, EyeSlashIcon, UserIcon, SparklesIcon } from '@/components/common/Icons';
+import {
+  DashboardIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  UserIcon,
+  SparklesIcon,
+} from '@/components/common/Icons';
 import { useAuth } from '@/contexts/AuthContext';
 import type { View } from '@/types';
 
@@ -20,26 +26,34 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [localError, setLocalError] = useState<string | null>(null);
 
   const isLogin = type === 'login';
   const isLoading = authLoading;
 
+  // ============================================
+  // ⚠️ DEVELOPMENT ONLY - REMOVE BEFORE PRODUCTION
   // Dev login for testing (uses actual API with dev credentials)
+  // See README.md "Production Deployment" for removal instructions.
+  // ============================================
+  // DEV_FUNCTION_START: handleDevLogin
   const handleDevLogin = async (role: 'admin' | 'user') => {
     const devCredentials = {
       admin: { email: 'admin@syariahos.com', password: 'Admin123!' },
-      user: { email: 'budi.santoso@email.com', password: 'User123!' }
+      user: { email: 'budi.santoso@email.com', password: 'User123!' },
     };
 
     try {
       await login(devCredentials[role]);
     } catch {
-      setLocalError('Dev login failed. Make sure the backend is running and seeded with test users.');
+      setLocalError(
+        'Dev login failed. Make sure the backend is running and seeded with test users.'
+      );
     }
   };
+  // DEV_FUNCTION_END: handleDevLogin
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,14 +94,17 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4 py-12 relative overflow-hidden">
-
       {/* Background Decorations Layer */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary-500/10 dark:bg-primary-600/10 rounded-full blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary-500/10 dark:bg-secondary-600/10 rounded-full blur-[120px] animate-pulse [animation-delay:2s]"></div>
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
-             style={{ backgroundImage: 'radial-gradient(circle, #3b82f6 1.5px, transparent 1.5px)', backgroundSize: '48px 48px' }}>
-        </div>
+        <div
+          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #3b82f6 1.5px, transparent 1.5px)',
+            backgroundSize: '48px 48px',
+          }}
+        ></div>
       </div>
 
       <div className="max-w-md w-full space-y-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-2xl p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 dark:border-gray-700/50 relative z-10 animate-fadeIn">
@@ -114,9 +131,16 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
           </div>
         )}
 
-        {/* Dev Buttons Area */}
+        {/* ============================================
+            ⚠️ DEVELOPMENT ONLY - REMOVE BEFORE PRODUCTION
+            This section contains dev login shortcuts for testing.
+            See README.md "Production Deployment" for removal instructions.
+            ============================================ */}
+        {/* DEV_SHORTCUTS_START */}
         <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/30">
-          <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3 text-center">Development Shortcuts</p>
+          <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-3 text-center">
+            Development Shortcuts
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -138,6 +162,7 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
             </button>
           </div>
         </div>
+        {/* DEV_SHORTCUTS_END */}
 
         <div className="relative">
           <form
@@ -146,7 +171,9 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
           >
             {!isLogin && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">Nama Lengkap</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">
+                  Nama Lengkap
+                </label>
                 <input
                   name="name"
                   type="text"
@@ -160,7 +187,9 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">Email</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">
+                Email
+              </label>
               <input
                 name="email"
                 type="email"
@@ -173,7 +202,9 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">Password</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">
+                Password
+              </label>
               <div className="relative">
                 <input
                   name="password"
@@ -189,14 +220,20 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary-500 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
 
             {!isLogin && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">Verifikasi Password</label>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 ml-1">
+                  Verifikasi Password
+                </label>
                 <div className="relative">
                   <input
                     name="confirmPassword"
@@ -212,7 +249,11 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary-500 transition-colors"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -226,8 +267,10 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
               >
                 {isLoading ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : isLogin ? (
+                  'Masuk Sekarang'
                 ) : (
-                  isLogin ? 'Masuk Sekarang' : 'Daftar Akun'
+                  'Daftar Akun'
                 )}
               </button>
             </div>
@@ -246,16 +289,20 @@ const Auth: React.FC<AuthProps> = ({ type, setView }) => {
         </div>
 
         <div className="mt-8 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-              {isLogin ? 'Baru di SyariahOS?' : 'Sudah memiliki akun?'}
-              <button
-                type="button"
-                onClick={() => { setView(isLogin ? 'register' : 'login'); clearError(); setLocalError(null); }}
-                className="ml-2 font-bold text-primary-600 hover:text-primary-500 focus:outline-none transition-all hover:underline underline-offset-4 decoration-2"
-              >
-                {isLogin ? 'Daftar Gratis' : 'Masuk di Sini'}
-              </button>
-            </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+            {isLogin ? 'Baru di SyariahOS?' : 'Sudah memiliki akun?'}
+            <button
+              type="button"
+              onClick={() => {
+                setView(isLogin ? 'register' : 'login');
+                clearError();
+                setLocalError(null);
+              }}
+              className="ml-2 font-bold text-primary-600 hover:text-primary-500 focus:outline-none transition-all hover:underline underline-offset-4 decoration-2"
+            >
+              {isLogin ? 'Daftar Gratis' : 'Masuk di Sini'}
+            </button>
+          </p>
         </div>
       </div>
     </div>

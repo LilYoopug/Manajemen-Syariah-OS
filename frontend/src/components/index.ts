@@ -1,14 +1,14 @@
 export { default as Icons } from './common/Icons';
 export { default as KpiCard } from './common/KpiCard';
-export { 
-  Skeleton, 
-  SkeletonCard, 
-  SkeletonText, 
-  SkeletonChart, 
-  SkeletonAvatar, 
-  SkeletonButton, 
-  SkeletonInput, 
-  SkeletonList 
+export {
+  Skeleton,
+  SkeletonCard,
+  SkeletonText,
+  SkeletonChart,
+  SkeletonAvatar,
+  SkeletonButton,
+  SkeletonInput,
+  SkeletonList,
 } from './common/Skeleton';
 export { default as Header } from './layout/Header';
 export { default as Sidebar } from './layout/Sidebar';

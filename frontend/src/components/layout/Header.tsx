@@ -1,5 +1,12 @@
 import React from 'react';
-import { SunIcon, MoonIcon, MenuIcon, ChatBubbleLeftRightIcon, DashboardIcon, UserIcon } from '@/components/common/Icons';
+import {
+  SunIcon,
+  MoonIcon,
+  MenuIcon,
+  ChatBubbleLeftRightIcon,
+  DashboardIcon,
+  UserIcon,
+} from '@/components/common/Icons';
 import type { User } from '@/types/auth';
 
 interface HeaderProps {
@@ -11,10 +18,22 @@ interface HeaderProps {
   onLogout: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ toggleTheme, theme, setSidebarOpen, onOpenAssistant, user, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({
+  toggleTheme,
+  theme,
+  setSidebarOpen,
+  onOpenAssistant,
+  user,
+  onLogout,
+}) => {
   // Get user initials for avatar fallback
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const initials = user?.name ? getInitials(user.name) : 'U';
@@ -33,9 +52,11 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, theme, setSidebarOpen, onO
           {/* Logo & Brand - Mobile */}
           <div className="flex items-center ml-2 lg:hidden">
             <div className="p-1 bg-primary-600 rounded mr-2">
-                <DashboardIcon className="w-4 h-4 text-white" />
+              <DashboardIcon className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white truncate">SyariahOS</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white truncate">
+              SyariahOS
+            </span>
           </div>
 
           {/* Title - Desktop */}

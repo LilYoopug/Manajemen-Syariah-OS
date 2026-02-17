@@ -13,16 +13,26 @@ interface DirectoryDetailModalProps {
 
 const SourceBadge: React.FC<{ type: string }> = ({ type }) => {
   const badges = {
-    quran: { label: 'Quran', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
-    hadith: { label: 'Hadist', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-    website: { label: 'Website', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
-    none: { label: 'Tanpa Sumber', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
+    quran: {
+      label: 'Quran',
+      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    },
+    hadith: {
+      label: 'Hadist',
+      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    },
+    website: {
+      label: 'Website',
+      color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    },
+    none: {
+      label: 'Tanpa Sumber',
+      color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+    },
   };
   const badge = badges[type as keyof typeof badges] || badges.none;
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${badge.color}`}>
-      {badge.label}
-    </span>
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${badge.color}`}>{badge.label}</span>
   );
 };
 
@@ -37,8 +47,9 @@ const QuranSourceDisplay: React.FC<{ source: QuranSource }> = ({ source }) => {
   useEffect(() => {
     if (source.surah && source.verse) {
       setIsLoading(true);
-      islamicApi.getVerse(source.surah, source.verse)
-        .then(data => {
+      islamicApi
+        .getVerse(source.surah, source.verse)
+        .then((data) => {
           if (data) {
             setVerseData({
               arabic: data.arabic,
@@ -90,8 +101,9 @@ const HadithSourceDisplay: React.FC<{ source: HadithSource }> = ({ source }) => 
   useEffect(() => {
     if (source.book && source.number) {
       setIsLoading(true);
-      islamicApi.getHadith(source.book, source.number)
-        .then(data => {
+      islamicApi
+        .getHadith(source.book, source.number)
+        .then((data) => {
           if (data) {
             setHadithData({
               arabic: data.arabic,
@@ -145,9 +157,7 @@ const WebsiteSourceDisplay: React.FC<{ source: WebsiteSource }> = ({ source }) =
         {source.title}
       </a>
     </div>
-    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
-      {source.url}
-    </p>
+    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{source.url}</p>
   </div>
 );
 
@@ -185,7 +195,7 @@ const DirectoryDetailModal: React.FC<DirectoryDetailModalProps> = ({ item, onClo
       >
         <div
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-8 relative"
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={onClose}

@@ -3,23 +3,40 @@ import { directoryApi } from '@/lib/api-directory';
 import { islamicApi, Surah, HadithBook } from '@/lib/api-islamic';
 import type { DirectoryItem, Source, QuranSource, HadithSource, WebsiteSource } from '@/types/api';
 import ModalPortal from '@/components/common/ModalPortal';
-import { ChevronRightIcon, ChevronDownIcon, PlusIcon, XMarkIcon, TrashIcon, PencilIcon } from '@/components/common/Icons';
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  PlusIcon,
+  XMarkIcon,
+  TrashIcon,
+  PencilIcon,
+} from '@/components/common/Icons';
 import { Skeleton } from '@/components/common/Skeleton';
 
 // ============ Source Display Components ============
 
 const SourceBadge: React.FC<{ type: string }> = ({ type }) => {
   const badges = {
-    quran: { label: 'Quran', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
-    hadith: { label: 'Hadist', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-    website: { label: 'Website', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
-    none: { label: 'Tanpa Sumber', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' },
+    quran: {
+      label: 'Quran',
+      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    },
+    hadith: {
+      label: 'Hadist',
+      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+    },
+    website: {
+      label: 'Website',
+      color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+    },
+    none: {
+      label: 'Tanpa Sumber',
+      color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+    },
   };
   const badge = badges[type as keyof typeof badges] || badges.none;
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${badge.color}`}>
-      {badge.label}
-    </span>
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${badge.color}`}>{badge.label}</span>
   );
 };
 
@@ -37,9 +54,7 @@ const QuranSourceDisplay: React.FC<{ source: QuranSource }> = ({ source }) => (
       </p>
     )}
     {source.translation && (
-      <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-        "{source.translation}"
-      </p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 italic">"{source.translation}"</p>
     )}
   </div>
 );
@@ -58,9 +73,7 @@ const HadithSourceDisplay: React.FC<{ source: HadithSource }> = ({ source }) => 
       </p>
     )}
     {source.translation && (
-      <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-        "{source.translation}"
-      </p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 italic">"{source.translation}"</p>
     )}
   </div>
 );
@@ -109,7 +122,13 @@ interface DirectoryNodeProps {
   isAdmin?: boolean;
 }
 
-const DirectoryNode: React.FC<DirectoryNodeProps> = ({ item, level, onEdit, onDelete, isAdmin }) => {
+const DirectoryNode: React.FC<DirectoryNodeProps> = ({
+  item,
+  level,
+  onEdit,
+  onDelete,
+  isAdmin,
+}) => {
   const [isOpen, setIsOpen] = useState(level < 1);
 
   const hasChildren = item.children && item.children.length > 0;
@@ -197,7 +216,13 @@ interface SourceFormProps {
   hadithBooks: HadithBook[];
 }
 
-const SourceForm: React.FC<SourceFormProps> = ({ source, onChange, onRemove, surahs, hadithBooks }) => {
+const SourceForm: React.FC<SourceFormProps> = ({
+  source,
+  onChange,
+  onRemove,
+  surahs,
+  hadithBooks,
+}) => {
   const [selectedSurah, setSelectedSurah] = useState<string>(
     source.type === 'quran' ? String(source.surah) : ''
   );
@@ -446,106 +471,109 @@ const WawasanFormModal: React.FC<WawasanFormModalProps> = ({
 
   return (
     <ModalPortal>
-    <div className="fixed inset-0 w-full h-full z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-              {initialData ? 'Edit Wawasan' : 'Tambah Wawasan'}
-            </h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-              <XMarkIcon className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Judul Wawasan
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Masukkan judul wawasan"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-              />
+      <div className="fixed inset-0 w-full h-full z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto m-4">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+                {initialData ? 'Edit Wawasan' : 'Tambah Wawasan'}
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
             </div>
+          </div>
 
-            {/* Sources */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Sumber Wawasan
+          {isLoading ? (
+            <div className="p-6 space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Judul Wawasan
                 </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Masukkan judul wawasan"
+                  required
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                />
+              </div>
+
+              {/* Sources */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Sumber Wawasan
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addSource}
+                    className="flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                    Tambah Sumber
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {sources.map((source, index) => (
+                    <SourceForm
+                      key={index}
+                      source={source}
+                      onChange={(s) => updateSource(index, s)}
+                      onRemove={() => removeSource(index)}
+                      surahs={surahs}
+                      hadithBooks={hadithBooks}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Explanation */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Penjelasan Detail
+                </label>
+                <textarea
+                  value={explanation}
+                  onChange={(e) => setExplanation(e.target.value)}
+                  placeholder="Masukkan penjelasan detail..."
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 resize-none"
+                />
+              </div>
+
+              {/* Submit */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
-                  onClick={addSource}
-                  className="flex items-center gap-1 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                  onClick={onClose}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                 >
-                  <PlusIcon className="w-4 h-4" />
-                  Tambah Sumber
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !title.trim()}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Menyimpan...' : initialData ? 'Simpan' : 'Tambah'}
                 </button>
               </div>
-              <div className="space-y-3">
-                {sources.map((source, index) => (
-                  <SourceForm
-                    key={index}
-                    source={source}
-                    onChange={(s) => updateSource(index, s)}
-                    onRemove={() => removeSource(index)}
-                    surahs={surahs}
-                    hadithBooks={hadithBooks}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Explanation */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Penjelasan Detail
-              </label>
-              <textarea
-                value={explanation}
-                onChange={(e) => setExplanation(e.target.value)}
-                placeholder="Masukkan penjelasan detail..."
-                rows={4}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 resize-none"
-              />
-            </div>
-
-            {/* Submit */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting || !title.trim()}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? 'Menyimpan...' : initialData ? 'Simpan' : 'Tambah'}
-              </button>
-            </div>
-          </form>
-        )}
+            </form>
+          )}
+        </div>
       </div>
-    </div>
     </ModalPortal>
   );
 };
