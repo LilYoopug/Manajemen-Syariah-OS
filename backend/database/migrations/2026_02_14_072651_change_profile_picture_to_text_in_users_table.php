@@ -23,7 +23,7 @@ return new class extends Migration
                 $table->string('password');
                 $table->string('role')->default('user');
                 $table->string('theme')->default('light');
-                $table->text('profile_picture')->nullable();
+                $table->longText('profile_picture')->nullable();
                 $table->decimal('zakat_rate', 5, 2)->nullable();
                 $table->string('preferred_akad')->nullable();
                 $table->string('calculation_method')->nullable();
@@ -41,7 +41,7 @@ return new class extends Migration
             Schema::rename('users_new', 'users');
         } else {
             Schema::table('users', function (Blueprint $table) {
-                $table->text('profile_picture')->nullable()->change();
+                $table->longText('profile_picture')->nullable()->change();
             });
         }
     }
